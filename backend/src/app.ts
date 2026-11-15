@@ -13,6 +13,7 @@ import ajusteRoutes from './routes/ajusteRoutes';
 import movimientoRoutes from './routes/movimientoRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import alertaRoutes from './routes/alertaRoutes';
+import reporteRoutes from './routes/reporteRoutes';
 
 export function createApp(): Application {
   const app: Application = express();
@@ -83,9 +84,7 @@ export function createApp(): Application {
   apiRouter.use('/movimientos', movimientoRoutes);
   apiRouter.use('/dashboard', dashboardRoutes);
   apiRouter.use('/alertas', alertaRoutes);
-
-  // Se agregaran en las siguientes etapas:
-  //   /reportes
+  apiRouter.use('/reportes', reporteRoutes);
 
   // Compatible tanto con prefijo /api como con rutas directas en Serverless
   app.use('/api', apiRouter);

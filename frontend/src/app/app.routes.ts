@@ -80,6 +80,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/alertas/alertas').then((m) => m.AlertasComponent),
   },
   {
+    path: 'reportes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/reportes/reportes').then((m) => m.ReportesComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),

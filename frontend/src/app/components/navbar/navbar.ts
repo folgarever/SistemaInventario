@@ -30,6 +30,7 @@ export class NavbarComponent {
     { ruta: '/ajustes', etiqueta: 'Ajustes' },
     { ruta: '/movimientos', etiqueta: 'Movimientos' },
     { ruta: '/alertas', etiqueta: 'Alertas' },
+    { ruta: '/reportes', etiqueta: 'Reportes' },
     { ruta: '/perfil', etiqueta: 'Perfil' },
   ];
 

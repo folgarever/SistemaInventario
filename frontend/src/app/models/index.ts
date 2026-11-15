@@ -202,3 +202,43 @@ export interface ResumenDashboard {
   alertas: AlertasDashboard;
   movimientosRecientes: Movimiento[];
 }
+
+export interface ReporteInventarioItem {
+  id: string;
+  nombre: string;
+  sku: string;
+  categoria: string | null;
+  proveedor: string | null;
+  unidad_medida: string;
+  stock: number | string;
+  stock_minimo: number | string;
+  precio_compra: number | string;
+  precio_venta: number | string;
+  valor_compra: number | string;
+  valor_venta: number | string;
+  estado: 'AGOTADO' | 'BAJO' | 'DISPONIBLE';
+}
+
+export interface ReporteInventario {
+  items: ReporteInventarioItem[];
+  totales: {
+    productos: number;
+    unidades: number | string;
+    valorCompra: number | string;
+    valorVenta: number | string;
+    agotados: number;
+    bajoStock: number;
+  };
+}
+
+export interface ReporteMovimientos {
+  items: Movimiento[];
+  totales: {
+    total: number;
+    entradas: number;
+    salidas: number;
+    ajustes: number;
+    unidadesEntrada: number | string;
+    unidadesSalida: number | string;
+  };
+}
