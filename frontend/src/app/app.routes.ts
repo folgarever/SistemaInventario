@@ -38,6 +38,17 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilComponent),
   },
   {
+    path: 'categorias',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/categorias/categorias').then((m) => m.CategoriasComponent),
+  },
+  {
+    path: 'proveedores',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/proveedores/proveedores').then((m) => m.ProveedoresComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),

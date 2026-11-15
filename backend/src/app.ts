@@ -4,6 +4,8 @@ import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import { securityHeaders } from './middlewares/securityHeaders';
 import authRoutes from './routes/authRoutes';
+import categoriaRoutes from './routes/categoriaRoutes';
+import proveedorRoutes from './routes/proveedorRoutes';
 
 export function createApp(): Application {
   const app: Application = express();
@@ -65,9 +67,11 @@ export function createApp(): Application {
 
   // Rutas de modulos
   apiRouter.use('/auth', authRoutes);
+  apiRouter.use('/categorias', categoriaRoutes);
+  apiRouter.use('/proveedores', proveedorRoutes);
 
   // Se agregaran en las siguientes etapas:
-  //   /categorias, /proveedores, /productos, /entradas,
+  //   /productos, /entradas,
   //   /salidas, /ajustes, /movimientos, /dashboard, /reportes
 
   // Compatible tanto con prefijo /api como con rutas directas en Serverless
