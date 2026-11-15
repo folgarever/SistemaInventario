@@ -33,6 +33,22 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(LOWER(username));
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(LOWER(email));
 
 -- =============================================================================
+-- 1b. TOKENS DE RESTABLECIMIENTO DE CONTRASEÑA
+-- Se guarda el hash SHA-256 del token (nunca el token en claro).
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) NOT NULL,
+    expira_at TIMESTAMPTZ NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reset_user ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_reset_hash ON password_reset_tokens(token_hash);
+
+-- =============================================================================
 -- 2. CATEGORIAS
 -- Administrables por el usuario (no hay listas fijas en el código).
 -- =============================================================================
@@ -274,6 +290,7 @@ CREATE TRIGGER trg_movimientos_inmutables BEFORE UPDATE OR DELETE ON movimientos
 -- backend, que ya valida la identidad y la pertenencia de cada registro.
 -- =============================================================================
 ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
+ALTER TABLE password_reset_tokens DISABLE ROW LEVEL SECURITY;
 ALTER TABLE categorias DISABLE ROW LEVEL SECURITY;
 ALTER TABLE proveedores DISABLE ROW LEVEL SECURITY;
 ALTER TABLE productos DISABLE ROW LEVEL SECURITY;

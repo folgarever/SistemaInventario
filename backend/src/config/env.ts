@@ -39,5 +39,10 @@ export const env = {
   // habilitado para no cambiar el comportamiento; defina REGISTRATION_ENABLED=false
   // en produccion si la aplicacion es de uso personal y no desea nuevas cuentas.
   REGISTRATION_ENABLED: process.env.REGISTRATION_ENABLED !== 'false',
+  // Servicio de correo (Resend) para la recuperacion de contraseña.
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'Sistema de Inventario <onboarding@resend.dev>',
+  // URL publica del frontend, usada para construir el enlace de restablecimiento.
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:4200',
   isProduction,
 };

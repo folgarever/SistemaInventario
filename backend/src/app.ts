@@ -3,6 +3,7 @@ import cors, { CorsOptions } from 'cors';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 import { securityHeaders } from './middlewares/securityHeaders';
+import authRoutes from './routes/authRoutes';
 
 export function createApp(): Application {
   const app: Application = express();
@@ -62,8 +63,11 @@ export function createApp(): Application {
     });
   });
 
-  // Las rutas de modulos se agregaran en las siguientes etapas:
-  //   /auth, /categorias, /proveedores, /productos, /entradas,
+  // Rutas de modulos
+  apiRouter.use('/auth', authRoutes);
+
+  // Se agregaran en las siguientes etapas:
+  //   /categorias, /proveedores, /productos, /entradas,
   //   /salidas, /ajustes, /movimientos, /dashboard, /reportes
 
   // Compatible tanto con prefijo /api como con rutas directas en Serverless

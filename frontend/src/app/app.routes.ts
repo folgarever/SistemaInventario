@@ -1,15 +1,45 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth.guard';
 
 // Rutas de la aplicacion. Los modulos se iran agregando por etapas
-// (login, dashboard, productos, categorias, proveedores, entradas,
-// salidas, ajustes, movimientos y reportes).
+// (productos, categorias, proveedores, entradas, salidas, ajustes,
+// movimientos y reportes).
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/inicio/inicio').then((m) => m.InicioComponent),
+    pathMatch: 'full',
+    redirectTo: 'dashboard',
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'registro',
+    loadComponent: () => import('./pages/registro/registro').then((m) => m.RegistroComponent),
+  },
+  {
+    path: 'recuperar',
+    loadComponent: () => import('./pages/recuperar/recuperar').then((m) => m.RecuperarComponent),
+  },
+  {
+    path: 'restablecer',
+    loadComponent: () =>
+      import('./pages/restablecer/restablecer').then((m) => m.RestablecerComponent),
+  },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardComponent),
+  },
+  {
+    path: 'perfil',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilComponent),
   },
   {
     path: '**',
-    redirectTo: '',
+    loadComponent: () =>
+      import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),
   },
 ];

@@ -1,15 +1,18 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
 
-// Barra de navegacion negra (identidad visual Uber). Las opciones de los
-// modulos se habilitaran conforme se implementen las etapas del sistema.
+// Barra de navegacion negra (identidad visual Uber). Muestra las opciones de
+// autenticacion cuando no hay sesion y los enlaces de los modulos cuando la hay.
+// Las opciones de los modulos se iran habilitando conforme se implementen.
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
 export class NavbarComponent {
   readonly titulo = 'Sistema de Inventario';
+  readonly auth = inject(AuthService);
 }

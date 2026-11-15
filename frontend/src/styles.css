@@ -532,3 +532,95 @@ p {
 @media (max-width: 560px) {
   .table { min-width: 520px; }
 }
+
+/* ==========================================================================
+   AUTENTICACION (login, registro, recuperacion)
+   ========================================================================== */
+.auth-shell {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-card-wide {
+  max-width: 560px;
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-uber);
+  background-color: var(--color-black);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 18px;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.auth-subtitle {
+  color: var(--color-gray-secondary);
+  font-size: 14px;
+  margin: 4px 0 22px;
+}
+
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-gray-border);
+  font-size: 13px;
+}
+
+.auth-links a {
+  color: var(--color-gray-secondary);
+}
+
+.auth-links a:hover {
+  color: var(--color-black);
+  text-decoration: underline;
+}
+
+.auth-actions {
+  margin-top: 22px;
+}
+
+.auth-actions .btn-uber {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: 24px 18px; }
+}
+
+/* ==========================================================================
+   PERFIL
+   ========================================================================== */
+.perfil-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+}

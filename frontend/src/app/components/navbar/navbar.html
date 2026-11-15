@@ -1,8 +1,35 @@
 <nav class="navbar-uber">
   <div class="navbar-container">
-    <a routerLink="/" class="navbar-brand">
+    <a routerLink="/dashboard" class="navbar-brand">
       <span class="brand-mark" aria-hidden="true">SI</span>
       <span class="brand-text">{{ titulo }}</span>
     </a>
+
+    @if (auth.isAuthenticated()) {
+      <div class="navbar-links">
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="is-active"
+          class="navbar-link"
+        >Panel</a>
+        <a
+          routerLink="/perfil"
+          routerLinkActive="is-active"
+          class="navbar-link"
+        >Perfil</a>
+      </div>
+
+      <div class="navbar-user">
+        <span class="user-chip" [title]="auth.currentUser()?.email ?? ''">
+          {{ auth.currentUser()?.nombres }} {{ auth.currentUser()?.apellidos }}
+        </span>
+        <button type="button" class="btn-logout" (click)="auth.logout()">Salir</button>
+      </div>
+    } @else {
+      <div class="navbar-user">
+        <a routerLink="/login" class="navbar-link">Iniciar sesión</a>
+        <a routerLink="/registro" class="btn-navbar">Crear cuenta</a>
+      </div>
+    }
   </div>
 </nav>
