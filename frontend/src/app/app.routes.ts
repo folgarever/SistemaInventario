@@ -49,6 +49,11 @@ export const routes: Routes = [
       import('./pages/proveedores/proveedores').then((m) => m.ProveedoresComponent),
   },
   {
+    path: 'productos',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/productos/productos').then((m) => m.ProductosComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),

@@ -641,6 +641,10 @@ p {
   max-width: 320px;
 }
 
+.toolbar .form-select {
+  max-width: 220px;
+}
+
 .checkbox-inline {
   display: inline-flex;
   align-items: center;

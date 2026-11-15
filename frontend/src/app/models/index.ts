@@ -50,3 +50,24 @@ export interface Proveedor {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface Producto {
+  id: string;
+  user_id: string;
+  categoria_id: string | null;
+  proveedor_id: string | null;
+  nombre: string;
+  sku: string;
+  descripcion: string | null;
+  precio_compra: number | string;
+  precio_venta: number | string;
+  stock: number | string;
+  stock_minimo: number | string;
+  unidad_medida: string;
+  imagen_url: string | null;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+  categoria?: { id: string; nombre: string } | null;
+  proveedor?: { id: string; nombre: string } | null;
+}

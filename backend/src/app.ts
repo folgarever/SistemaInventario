@@ -6,6 +6,7 @@ import { securityHeaders } from './middlewares/securityHeaders';
 import authRoutes from './routes/authRoutes';
 import categoriaRoutes from './routes/categoriaRoutes';
 import proveedorRoutes from './routes/proveedorRoutes';
+import productoRoutes from './routes/productoRoutes';
 
 export function createApp(): Application {
   const app: Application = express();
@@ -69,10 +70,10 @@ export function createApp(): Application {
   apiRouter.use('/auth', authRoutes);
   apiRouter.use('/categorias', categoriaRoutes);
   apiRouter.use('/proveedores', proveedorRoutes);
+  apiRouter.use('/productos', productoRoutes);
 
   // Se agregaran en las siguientes etapas:
-  //   /productos, /entradas,
-  //   /salidas, /ajustes, /movimientos, /dashboard, /reportes
+  //   /entradas, /salidas, /ajustes, /movimientos, /dashboard, /reportes
 
   // Compatible tanto con prefijo /api como con rutas directas en Serverless
   app.use('/api', apiRouter);
