@@ -64,6 +64,17 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/salidas/salidas').then((m) => m.SalidasComponent),
   },
   {
+    path: 'ajustes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/ajustes/ajustes').then((m) => m.AjustesComponent),
+  },
+  {
+    path: 'movimientos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/movimientos/movimientos').then((m) => m.MovimientosComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),

@@ -123,3 +123,43 @@ export interface ResultadoSalida {
   fecha?: string;
   idempotente: boolean;
 }
+
+export interface Ajuste {
+  id: string;
+  user_id: string;
+  producto_id: string;
+  existencias_anteriores: number | string;
+  existencias_fisicas: number | string;
+  diferencia: number | string;
+  motivo: string;
+  observaciones: string | null;
+  client_request_id: string | null;
+  fecha: string;
+  created_at?: string;
+  producto?: { id: string; nombre: string; sku: string; unidad_medida: string } | null;
+}
+
+export interface ResultadoAjuste {
+  ajuste_id: string;
+  existencias_anteriores?: number;
+  existencias_fisicas?: number;
+  diferencia?: number;
+  fecha?: string;
+  idempotente: boolean;
+}
+
+export interface Movimiento {
+  id: string;
+  user_id: string;
+  producto_id: string;
+  tipo: string;
+  referencia_id: string;
+  descripcion: string;
+  cantidad: number | string;
+  existencias_anteriores: number | string;
+  existencias_posteriores: number | string;
+  motivo: string | null;
+  fecha: string;
+  created_at?: string;
+  producto?: { id: string; nombre: string; sku: string; unidad_medida: string } | null;
+}
