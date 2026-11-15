@@ -7,5 +7,5 @@ export const environment = {
   apiUrl:
     isLocal && typeof window !== 'undefined' && window.location.port === '4200'
       ? 'http://localhost:3000/api'
-      : 'https://sistema-inventario.vercel.app/api',
+      : '/api',
 };

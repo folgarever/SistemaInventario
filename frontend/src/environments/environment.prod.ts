@@ -14,7 +14,9 @@ function getApiUrl(): string {
       if (stored) return stored;
     } catch {}
   }
-  return 'https://sistema-inventario.vercel.app/api';
+  // En produccion el frontend y la API viven en el mismo dominio (Vercel),
+  // por eso basta con una ruta relativa. Se puede sobreescribir con window.API_URL.
+  return '/api';
 }
 
 export const environment = {
