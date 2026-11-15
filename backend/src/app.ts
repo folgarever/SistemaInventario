@@ -8,6 +8,7 @@ import categoriaRoutes from './routes/categoriaRoutes';
 import proveedorRoutes from './routes/proveedorRoutes';
 import productoRoutes from './routes/productoRoutes';
 import entradaRoutes from './routes/entradaRoutes';
+import salidaRoutes from './routes/salidaRoutes';
 
 export function createApp(): Application {
   const app: Application = express();
@@ -73,9 +74,10 @@ export function createApp(): Application {
   apiRouter.use('/proveedores', proveedorRoutes);
   apiRouter.use('/productos', productoRoutes);
   apiRouter.use('/entradas', entradaRoutes);
+  apiRouter.use('/salidas', salidaRoutes);
 
   // Se agregaran en las siguientes etapas:
-  //   /salidas, /ajustes, /movimientos, /dashboard, /reportes
+  //   /ajustes, /movimientos, /dashboard, /reportes
 
   // Compatible tanto con prefijo /api como con rutas directas en Serverless
   app.use('/api', apiRouter);

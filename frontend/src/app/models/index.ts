@@ -101,3 +101,25 @@ export interface ResultadoEntrada {
   fecha?: string;
   idempotente: boolean;
 }
+
+export interface Salida {
+  id: string;
+  user_id: string;
+  producto_id: string;
+  cantidad: number | string;
+  motivo: string;
+  observaciones: string | null;
+  client_request_id: string | null;
+  fecha: string;
+  created_at?: string;
+  producto?: { id: string; nombre: string; sku: string; unidad_medida: string } | null;
+}
+
+export interface ResultadoSalida {
+  salida_id: string;
+  cantidad?: number;
+  existencias_anteriores?: number;
+  existencias_posteriores?: number;
+  fecha?: string;
+  idempotente: boolean;
+}
