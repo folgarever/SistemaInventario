@@ -71,3 +71,33 @@ export interface Producto {
   categoria?: { id: string; nombre: string } | null;
   proveedor?: { id: string; nombre: string } | null;
 }
+
+export interface EntradaDetalle {
+  id: string;
+  entrada_id: string;
+  producto_id: string;
+  cantidad: number | string;
+  costo_unitario: number | string;
+  subtotal: number | string;
+  producto?: { id: string; nombre: string; sku: string; unidad_medida: string } | null;
+}
+
+export interface Entrada {
+  id: string;
+  user_id: string;
+  proveedor_id: string | null;
+  observaciones: string | null;
+  total: number | string;
+  client_request_id: string | null;
+  fecha: string;
+  created_at?: string;
+  proveedor?: { id: string; nombre: string } | null;
+  detalles?: EntradaDetalle[];
+}
+
+export interface ResultadoEntrada {
+  entrada_id: string;
+  total?: number;
+  fecha?: string;
+  idempotente: boolean;
+}

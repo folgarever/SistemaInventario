@@ -739,3 +739,69 @@ p {
   .modal-body { padding: 18px; }
   .toolbar .form-control { max-width: none; }
 }
+
+/* ==========================================================================
+   LINEAS DE ENTRADA (formulario multi-producto)
+   ========================================================================== */
+.lineas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.linea-entrada {
+  display: grid;
+  grid-template-columns: minmax(200px, 2fr) 110px 130px 120px 40px;
+  gap: 8px;
+  align-items: center;
+}
+
+.linea-subtotal {
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-gray-dark);
+}
+
+.total-entrada {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-gray-border);
+}
+
+.total-valor {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.detalle-fila {
+  background-color: var(--color-surface-muted);
+  padding: 0 !important;
+}
+
+.detalle-tabla {
+  min-width: 480px;
+  border: none;
+}
+
+.detalle-tabla thead th {
+  background-color: transparent;
+}
+
+@media (max-width: 760px) {
+  .linea-entrada {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--color-gray-border);
+  }
+  .linea-entrada .linea-subtotal {
+    grid-column: 1 / 2;
+    text-align: left;
+  }
+}
