@@ -163,3 +163,42 @@ export interface Movimiento {
   created_at?: string;
   producto?: { id: string; nombre: string; sku: string; unidad_medida: string } | null;
 }
+
+export interface TotalesDashboard {
+  productos: number;
+  categorias: number;
+  proveedores: number;
+  movimientos: number;
+}
+
+export interface InventarioDashboard {
+  unidades: number | string;
+  valorCompra: number | string;
+  valorVenta: number | string;
+}
+
+export interface AlertaStock {
+  id: string;
+  nombre: string;
+  sku: string;
+  unidad_medida: string;
+  stock: number | string;
+  stock_minimo: number | string;
+  faltante: number | string;
+  estado: 'AGOTADO' | 'BAJO';
+  categoria?: { id: string; nombre: string } | null;
+}
+
+export interface AlertasDashboard {
+  agotados: number;
+  bajoStock: number;
+  total: number;
+  items: AlertaStock[];
+}
+
+export interface ResumenDashboard {
+  totales: TotalesDashboard;
+  inventario: InventarioDashboard;
+  alertas: AlertasDashboard;
+  movimientosRecientes: Movimiento[];
+}

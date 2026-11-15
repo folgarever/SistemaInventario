@@ -363,6 +363,53 @@ p {
 }
 
 /* ==========================================================================
+   DASHBOARD
+   ========================================================================== */
+.dashboard-columnas {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+}
+
+.dashboard-metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+
+.lista-alertas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-alertas li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-gray-border);
+}
+
+.lista-alertas li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.alert-faltante {
+  margin-left: auto;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* ==========================================================================
    TABLAS
    ========================================================================== */
 .table-wrapper {

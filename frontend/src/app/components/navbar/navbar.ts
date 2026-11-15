@@ -1,10 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 
-// Barra de navegacion negra (identidad visual Uber). Muestra las opciones de
-// autenticacion cuando no hay sesion y los enlaces de los modulos cuando la hay.
-// Las opciones de los modulos se iran habilitando conforme se implementen.
+interface EnlaceNav {
+  ruta: string;
+  etiqueta: string;
+}
+
+// Barra de navegacion negra (identidad visual Uber). En pantallas pequenas los
+// enlaces se muestran en un menu desplegable.
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -15,4 +19,27 @@ import { AuthService } from '../../core/auth.service';
 export class NavbarComponent {
   readonly titulo = 'Sistema de Inventario';
   readonly auth = inject(AuthService);
+
+  readonly enlaces: EnlaceNav[] = [
+    { ruta: '/dashboard', etiqueta: 'Panel' },
+    { ruta: '/categorias', etiqueta: 'Categorías' },
+    { ruta: '/proveedores', etiqueta: 'Proveedores' },
+    { ruta: '/productos', etiqueta: 'Productos' },
+    { ruta: '/entradas', etiqueta: 'Entradas' },
+    { ruta: '/salidas', etiqueta: 'Salidas' },
+    { ruta: '/ajustes', etiqueta: 'Ajustes' },
+    { ruta: '/movimientos', etiqueta: 'Movimientos' },
+    { ruta: '/alertas', etiqueta: 'Alertas' },
+    { ruta: '/perfil', etiqueta: 'Perfil' },
+  ];
+
+  menuAbierto = signal(false);
+
+  alternarMenu(): void {
+    this.menuAbierto.update((v) => !v);
+  }
+
+  cerrarMenu(): void {
+    this.menuAbierto.set(false);
+  }
 }

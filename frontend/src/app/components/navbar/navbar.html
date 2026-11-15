@@ -1,57 +1,32 @@
 <nav class="navbar-uber">
   <div class="navbar-container">
-    <a routerLink="/dashboard" class="navbar-brand">
+    <a routerLink="/dashboard" class="navbar-brand" (click)="cerrarMenu()">
       <span class="brand-mark" aria-hidden="true">SI</span>
       <span class="brand-text">{{ titulo }}</span>
     </a>
 
     @if (auth.isAuthenticated()) {
-      <div class="navbar-links">
-        <a
-          routerLink="/dashboard"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Panel</a>
-        <a
-          routerLink="/categorias"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Categorías</a>
-        <a
-          routerLink="/proveedores"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Proveedores</a>
-        <a
-          routerLink="/productos"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Productos</a>
-        <a
-          routerLink="/entradas"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Entradas</a>
-        <a
-          routerLink="/salidas"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Salidas</a>
-        <a
-          routerLink="/ajustes"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Ajustes</a>
-        <a
-          routerLink="/movimientos"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Movimientos</a>
-        <a
-          routerLink="/perfil"
-          routerLinkActive="is-active"
-          class="navbar-link"
-        >Perfil</a>
+      <button
+        type="button"
+        class="navbar-toggle"
+        [attr.aria-expanded]="menuAbierto()"
+        aria-label="Abrir menú de navegación"
+        (click)="alternarMenu()"
+      >
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
+        <span class="toggle-bar"></span>
+      </button>
+
+      <div class="navbar-links" [class.is-open]="menuAbierto()">
+        @for (enlace of enlaces; track enlace.ruta) {
+          <a
+            [routerLink]="enlace.ruta"
+            routerLinkActive="is-active"
+            class="navbar-link"
+            (click)="cerrarMenu()"
+          >{{ enlace.etiqueta }}</a>
+        }
       </div>
 
       <div class="navbar-user">
