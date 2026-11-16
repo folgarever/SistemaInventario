@@ -20,6 +20,24 @@ export function formatoCantidad(valor: number | string | null | undefined): stri
   return numero(valor).toLocaleString('es-ES', { maximumFractionDigits: 3 });
 }
 
+// Ganancia por unidad: precio de venta menos precio de compra.
+export function ganancia(
+  precioVenta: number | string | null | undefined,
+  precioCompra: number | string | null | undefined,
+): number {
+  return numero(precioVenta) - numero(precioCompra);
+}
+
+// Margen de ganancia sobre el precio de venta, expresado en porcentaje.
+export function margenGanancia(
+  precioVenta: number | string | null | undefined,
+  precioCompra: number | string | null | undefined,
+): number {
+  const venta = numero(precioVenta);
+  if (venta <= 0) return 0;
+  return (ganancia(venta, precioCompra) / venta) * 100;
+}
+
 export type EstadoStock = 'agotado' | 'bajo' | 'disponible';
 
 // Determina el estado de existencias de un producto.

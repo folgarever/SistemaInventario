@@ -4,6 +4,8 @@ import {
   etiquetaEstadoStock,
   formatoCantidad,
   formatoMoneda,
+  ganancia,
+  margenGanancia,
   numero,
 } from './formato.utils';
 
@@ -47,6 +49,33 @@ describe('formatoCantidad', () => {
   it('admite hasta tres decimales', () => {
     expect(formatoCantidad('2.5')).toMatch(/2,5/);
     expect(formatoCantidad('1.2345')).toMatch(/1,23/);
+  });
+});
+
+describe('ganancia', () => {
+  it('calcula la diferencia entre venta y compra', () => {
+    expect(ganancia('15', '10')).toBe(5);
+    expect(ganancia(15, 10)).toBe(5);
+  });
+
+  it('devuelve un valor negativo si se vende por debajo del costo', () => {
+    expect(ganancia(8, 10)).toBe(-2);
+  });
+
+  it('trata los valores vacíos como cero', () => {
+    expect(ganancia(null, '10')).toBe(-10);
+    expect(ganancia('10', undefined)).toBe(10);
+  });
+});
+
+describe('margenGanancia', () => {
+  it('expresa la ganancia como porcentaje del precio de venta', () => {
+    expect(margenGanancia(20, 15)).toBe(25);
+  });
+
+  it('devuelve 0 cuando el precio de venta es cero o negativo', () => {
+    expect(margenGanancia(0, 5)).toBe(0);
+    expect(margenGanancia(-3, 5)).toBe(0);
   });
 });
 

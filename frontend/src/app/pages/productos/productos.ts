@@ -8,7 +8,16 @@ import { CategoriaService } from '../../services/categoria.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { ModalComponent } from '../../components/modal/modal';
 import { mensajeError } from '../../core/api-error.utils';
-import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.utils';
+import { descargarCsv, fechaArchivo } from '../../core/csv.utils';
+import {
+  estadoStock,
+  etiquetaEstadoStock,
+  formatoCantidad,
+  formatoMoneda,
+  ganancia,
+  margenGanancia,
+  numero,
+} from '../../core/formato.utils';
 
 @Component({
   selector: 'app-productos',
@@ -19,9 +28,14 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
       <div class="page-header">
         <div>
           <h1 class="page-title">Productos</h1>
-          <p class="page-subtitle">Catálogo de productos, precios y existencias.</p>
+          <p class="page-subtitle">Costo, precio de venta, ganancia y existencias de cada producto.</p>
         </div>
-        <button type="button" class="btn-uber" (click)="abrirCrear()">Nuevo producto</button>
+        <div class="actions">
+          <button type="button" class="btn-uber btn-uber-outline" [disabled]="productos().length === 0" (click)="exportar()">
+            Exportar CSV
+          </button>
+          <button type="button" class="btn-uber" (click)="abrirCrear()">Nuevo producto</button>
+        </div>
       </div>
 
       <div class="toolbar">
@@ -62,7 +76,9 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
               <th>SKU</th>
               <th>Producto</th>
               <th>Categoría</th>
+              <th class="text-right">Costo</th>
               <th class="text-right">Precio venta</th>
+              <th class="text-right">Ganancia</th>
               <th class="text-right">Existencias</th>
               <th>Estado</th>
               <th class="text-right">Acciones</th>
@@ -71,11 +87,11 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
           <tbody>
             @if (cargando()) {
               <tr>
-                <td colspan="7" class="table-empty"><span class="spinner"></span></td>
+                <td colspan="9" class="table-empty"><span class="spinner"></span></td>
               </tr>
             } @else if (productos().length === 0) {
               <tr>
-                <td colspan="7" class="table-empty">No hay productos para mostrar.</td>
+                <td colspan="9" class="table-empty">No hay productos para mostrar.</td>
               </tr>
             } @else {
               @for (p of productos(); track p.id) {
@@ -88,7 +104,14 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
                     }
                   </td>
                   <td class="text-muted">{{ p.categoria?.nombre || '—' }}</td>
+                  <td class="text-right font-mono">{{ formatoMoneda(p.precio_compra) }}</td>
                   <td class="text-right font-mono">{{ formatoMoneda(p.precio_venta) }}</td>
+                  <td class="text-right font-mono">
+                    <span [class.ganancia-positiva]="ganancia(p) > 0" [class.ganancia-negativa]="ganancia(p) < 0">
+                      {{ formatoMoneda(ganancia(p)) }}
+                    </span>
+                    <span class="text-muted" style="font-size: 12px;">({{ margen(p) }}%)</span>
+                  </td>
                   <td class="text-right font-mono">
                     {{ formatoCantidad(p.stock) }} {{ p.unidad_medida }}
                   </td>
@@ -170,21 +193,63 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label" for="categoria_id">Categoría</label>
-              <select id="categoria_id" class="form-select form-control" formControlName="categoria_id">
-                <option value="">Sin categoría</option>
-                @for (c of categorias(); track c.id) {
-                  <option [value]="c.id">{{ c.nombre }}</option>
+              <div class="campo-con-agregar">
+                <select id="categoria_id" class="form-select form-control" formControlName="categoria_id">
+                  <option value="">Sin categoría</option>
+                  @for (c of categorias(); track c.id) {
+                    <option [value]="c.id">{{ c.nombre }}</option>
+                  }
+                </select>
+                <button type="button" class="btn-uber btn-uber-outline btn-sm" (click)="alternarNuevaCategoria()">
+                  {{ nuevaCategoriaAbierta() ? 'Cancelar' : '+ Nueva' }}
+                </button>
+              </div>
+              @if (nuevaCategoriaAbierta()) {
+                <div class="agregar-inline">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Nombre de la categoría"
+                    [formControl]="nuevaCategoria"
+                  />
+                  <button type="button" class="btn-uber btn-sm" [disabled]="guardandoCombo()" (click)="crearCategoria()">
+                    Agregar
+                  </button>
+                </div>
+                @if (errorCombo()) {
+                  <span class="form-error">{{ errorCombo() }}</span>
                 }
-              </select>
+              }
             </div>
             <div class="form-group">
               <label class="form-label" for="proveedor_id">Proveedor</label>
-              <select id="proveedor_id" class="form-select form-control" formControlName="proveedor_id">
-                <option value="">Sin proveedor</option>
-                @for (p of proveedores(); track p.id) {
-                  <option [value]="p.id">{{ p.nombre }}</option>
+              <div class="campo-con-agregar">
+                <select id="proveedor_id" class="form-select form-control" formControlName="proveedor_id">
+                  <option value="">Sin proveedor</option>
+                  @for (p of proveedores(); track p.id) {
+                    <option [value]="p.id">{{ p.nombre }}</option>
+                  }
+                </select>
+                <button type="button" class="btn-uber btn-uber-outline btn-sm" (click)="alternarNuevoProveedor()">
+                  {{ nuevoProveedorAbierto() ? 'Cancelar' : '+ Nuevo' }}
+                </button>
+              </div>
+              @if (nuevoProveedorAbierto()) {
+                <div class="agregar-inline">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Nombre del proveedor"
+                    [formControl]="nuevoProveedor"
+                  />
+                  <button type="button" class="btn-uber btn-sm" [disabled]="guardandoCombo()" (click)="crearProveedor()">
+                    Agregar
+                  </button>
+                </div>
+                @if (errorCombo()) {
+                  <span class="form-error">{{ errorCombo() }}</span>
                 }
-              </select>
+              }
             </div>
           </div>
 
@@ -224,6 +289,16 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
             </div>
           </div>
 
+          @if (gananciaForm() !== 0) {
+            <div class="alert mb-16">
+              <span>
+                Ganancia por unidad:
+                <strong>{{ formatoMoneda(gananciaForm()) }}</strong>
+                ({{ margenForm() }}% sobre el precio de venta).
+              </span>
+            </div>
+          }
+
           <div class="form-group">
             <label class="form-label" for="descripcion">Descripción (opcional)</label>
             <textarea id="descripcion" class="form-control" rows="2" formControlName="descripcion"></textarea>
@@ -233,7 +308,7 @@ import { estadoStock, formatoCantidad, formatoMoneda } from '../../core/formato.
             <div class="alert">
               <span>
                 Las existencias actuales ({{ formatoCantidad(editando()!.stock) }}
-                {{ editando()!.unidad_medida }}) solo cambian con entradas, salidas o ajustes.
+                {{ editando()!.unidad_medida }}) solo cambian con compras, ventas o ajustes.
               </span>
             </div>
           }
@@ -290,6 +365,14 @@ export class ProductosComponent implements OnInit {
   editando = signal<Producto | null>(null);
   guardando = signal(false);
   errorForm = signal<string | null>(null);
+
+  // Creación rápida de categorías y proveedores desde el propio formulario.
+  nuevaCategoriaAbierta = signal(false);
+  nuevoProveedorAbierto = signal(false);
+  guardandoCombo = signal(false);
+  errorCombo = signal<string | null>(null);
+  nuevaCategoria = this.fb.nonNullable.control('');
+  nuevoProveedor = this.fb.nonNullable.control('');
 
   form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(150)]],
@@ -362,9 +445,29 @@ export class ProductosComponent implements OnInit {
     return estadoStock(p.stock, p.stock_minimo);
   }
 
+  ganancia(p: Producto): number {
+    return ganancia(p.precio_venta, p.precio_compra);
+  }
+
+  margen(p: Producto): number {
+    return Math.round(margenGanancia(p.precio_venta, p.precio_compra));
+  }
+
+  // Ganancia por unidad con los valores escritos en el formulario.
+  gananciaForm(): number {
+    const v = this.form.getRawValue();
+    return ganancia(v.precio_venta, v.precio_compra);
+  }
+
+  margenForm(): number {
+    const v = this.form.getRawValue();
+    return Math.round(margenGanancia(v.precio_venta, v.precio_compra));
+  }
+
   abrirCrear(): void {
     this.editando.set(null);
     this.errorForm.set(null);
+    this.limpiarCombos();
     this.form.reset({
       nombre: '',
       sku: '',
@@ -382,6 +485,7 @@ export class ProductosComponent implements OnInit {
   abrirEditar(producto: Producto): void {
     this.editando.set(producto);
     this.errorForm.set(null);
+    this.limpiarCombos();
     this.form.reset({
       nombre: producto.nombre,
       sku: producto.sku,
@@ -399,6 +503,75 @@ export class ProductosComponent implements OnInit {
   cerrarForm(): void {
     this.mostrarForm.set(false);
     this.editando.set(null);
+    this.limpiarCombos();
+  }
+
+  private limpiarCombos(): void {
+    this.nuevaCategoriaAbierta.set(false);
+    this.nuevoProveedorAbierto.set(false);
+    this.errorCombo.set(null);
+    this.nuevaCategoria.setValue('');
+    this.nuevoProveedor.setValue('');
+  }
+
+  alternarNuevaCategoria(): void {
+    this.errorCombo.set(null);
+    this.nuevaCategoriaAbierta.update((v) => !v);
+  }
+
+  alternarNuevoProveedor(): void {
+    this.errorCombo.set(null);
+    this.nuevoProveedorAbierto.update((v) => !v);
+  }
+
+  crearCategoria(): void {
+    const nombre = this.nuevaCategoria.value.trim();
+    if (!nombre) {
+      this.errorCombo.set('Escribe el nombre de la categoría.');
+      return;
+    }
+
+    this.guardandoCombo.set(true);
+    this.errorCombo.set(null);
+
+    this.categoriaService.crear({ nombre }).subscribe({
+      next: (res) => {
+        this.guardandoCombo.set(false);
+        this.nuevaCategoriaAbierta.set(false);
+        this.nuevaCategoria.setValue('');
+        this.form.get('categoria_id')!.setValue(res.data.id);
+        this.cargarCombos();
+      },
+      error: (e) => {
+        this.errorCombo.set(mensajeError(e, 'No se pudo crear la categoría.'));
+        this.guardandoCombo.set(false);
+      },
+    });
+  }
+
+  crearProveedor(): void {
+    const nombre = this.nuevoProveedor.value.trim();
+    if (!nombre) {
+      this.errorCombo.set('Escribe el nombre del proveedor.');
+      return;
+    }
+
+    this.guardandoCombo.set(true);
+    this.errorCombo.set(null);
+
+    this.proveedorService.crear({ nombre }).subscribe({
+      next: (res) => {
+        this.guardandoCombo.set(false);
+        this.nuevoProveedorAbierto.set(false);
+        this.nuevoProveedor.setValue('');
+        this.form.get('proveedor_id')!.setValue(res.data.id);
+        this.cargarCombos();
+      },
+      error: (e) => {
+        this.errorCombo.set(mensajeError(e, 'No se pudo crear el proveedor.'));
+        this.guardandoCombo.set(false);
+      },
+    });
   }
 
   campoInvalido(campo: string): boolean {
@@ -462,5 +635,43 @@ export class ProductosComponent implements OnInit {
       next: () => this.cargar(),
       error: (e) => this.error.set(mensajeError(e, 'No se pudo eliminar el producto.')),
     });
+  }
+
+  exportar(): void {
+    const filas: (string | number)[][] = [
+      [
+        'SKU',
+        'Producto',
+        'Categoría',
+        'Proveedor',
+        'Unidad',
+        'Costo',
+        'Precio venta',
+        'Ganancia unidad',
+        'Margen %',
+        'Existencias',
+        'Stock mínimo',
+        'Estado',
+      ],
+    ];
+
+    for (const p of this.productos()) {
+      filas.push([
+        p.sku,
+        p.nombre,
+        p.categoria?.nombre ?? '',
+        p.proveedor?.nombre ?? '',
+        p.unidad_medida,
+        numero(p.precio_compra),
+        numero(p.precio_venta),
+        ganancia(p.precio_venta, p.precio_compra),
+        Math.round(margenGanancia(p.precio_venta, p.precio_compra) * 10) / 10,
+        numero(p.stock),
+        numero(p.stock_minimo),
+        etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
+      ]);
+    }
+
+    descargarCsv(`productos-${fechaArchivo()}.csv`, filas);
   }
 }

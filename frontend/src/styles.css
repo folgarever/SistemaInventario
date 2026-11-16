@@ -1124,3 +1124,38 @@ p {
     text-align: left;
   }
 }
+
+/* ==========================================================================
+   GANANCIA Y CREACION RAPIDA DENTRO DEL FORMULARIO
+   ========================================================================== */
+.ganancia-positiva {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.ganancia-negativa {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Select junto a un boton para agregar un valor nuevo (categoria/proveedor). */
+.campo-con-agregar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campo-con-agregar .form-select {
+  flex: 1;
+}
+
+.agregar-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.agregar-inline .form-control {
+  flex: 1;
+}
