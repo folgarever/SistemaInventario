@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 // Pie de pagina con la informacion legal y el medio de contacto.
 @Component({
   selector: 'app-footer',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <footer class="app-footer">
       <div class="footer-inner">
@@ -15,7 +17,10 @@ import { Component } from '@angular/core';
           </div>
         </div>
 
-        <a class="footer-mail" href="mailto:folgarever19@gmail.com">folgarever19&#64;gmail.com</a>
+        <div class="footer-links">
+          <a routerLink="/aviso-privacidad" class="footer-link">Aviso de privacidad</a>
+          <a class="footer-mail" href="mailto:folgarever19@gmail.com">folgarever19&#64;gmail.com</a>
+        </div>
       </div>
 
       <p class="footer-copy">© {{ anio }} Sistema de Inventario. Todos los derechos reservados.</p>
@@ -74,6 +79,20 @@ import { Component } from '@angular/core';
         color: var(--color-black);
         text-decoration: underline;
       }
+      .footer-links {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+      .footer-link {
+        font-size: 13px;
+        color: var(--color-gray-secondary);
+      }
+      .footer-link:hover {
+        color: var(--color-black);
+        text-decoration: underline;
+      }
       .footer-copy {
         margin-top: 18px;
         padding-top: 16px;
@@ -84,6 +103,9 @@ import { Component } from '@angular/core';
       @media (max-width: 640px) {
         .footer-inner {
           flex-direction: column;
+        }
+        .footer-links {
+          align-items: flex-start;
         }
       }
     `,

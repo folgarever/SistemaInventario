@@ -48,6 +48,11 @@ export const routes: Routes = [
       import('./pages/movimientos/movimientos').then((m) => m.MovimientosComponent),
   },
   {
+    path: 'aviso-privacidad',
+    loadComponent: () =>
+      import('./pages/aviso-privacidad/aviso-privacidad').then((m) => m.AvisoPrivacidadComponent),
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/no-encontrado/no-encontrado').then((m) => m.NoEncontradoComponent),
