@@ -1,6 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
 import { AlertaService } from '../../services/alerta.service';
 
 interface EnlaceNav {
@@ -21,6 +22,7 @@ export class NavbarComponent {
   readonly titulo = 'Sistema de Inventario';
   readonly auth = inject(AuthService);
   readonly alertas = inject(AlertaService);
+  readonly tema = inject(ThemeService);
 
   readonly enlaces: EnlaceNav[] = [
     { ruta: '/dashboard', etiqueta: 'Panel' },
@@ -45,6 +47,10 @@ export class NavbarComponent {
 
   alternarMenu(): void {
     this.menuAbierto.update((v) => !v);
+  }
+
+  alternarTema(): void {
+    this.tema.alternar();
   }
 
   cerrarMenu(): void {

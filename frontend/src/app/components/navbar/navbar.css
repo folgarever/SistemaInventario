@@ -1,5 +1,5 @@
 .navbar-uber {
-  background-color: var(--color-black);
+  background-color: var(--navbar-bg);
   color: var(--color-white);
   position: sticky;
   top: 0;
@@ -150,6 +150,29 @@
 }
 
 .btn-logout:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--color-white);
+}
+
+/* Boton para alternar entre tema claro y oscuro. */
+.btn-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 34px;
+  flex: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--color-white);
+  border-radius: var(--radius-uber);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-theme:hover {
   background-color: rgba(255, 255, 255, 0.12);
   border-color: var(--color-white);
 }

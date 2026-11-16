@@ -39,6 +39,15 @@
       </div>
 
       <div class="navbar-user">
+        <button
+          type="button"
+          class="btn-theme"
+          (click)="alternarTema()"
+          [attr.aria-label]="tema.tema() === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'"
+          [title]="tema.tema() === 'dark' ? 'Tema claro' : 'Tema oscuro'"
+        >
+          {{ tema.tema() === 'dark' ? '☀' : '☾' }}
+        </button>
         <span class="user-chip" [title]="auth.currentUser()?.email ?? ''">
           {{ auth.currentUser()?.nombres }} {{ auth.currentUser()?.apellidos }}
         </span>
@@ -46,6 +55,15 @@
       </div>
     } @else {
       <div class="navbar-user">
+        <button
+          type="button"
+          class="btn-theme"
+          (click)="alternarTema()"
+          [attr.aria-label]="tema.tema() === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'"
+          [title]="tema.tema() === 'dark' ? 'Tema claro' : 'Tema oscuro'"
+        >
+          {{ tema.tema() === 'dark' ? '☀' : '☾' }}
+        </button>
         <a routerLink="/login" class="navbar-link">Iniciar sesión</a>
         <a routerLink="/registro" class="btn-navbar">Crear cuenta</a>
       </div>

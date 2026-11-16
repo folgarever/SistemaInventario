@@ -1,10 +1,13 @@
 /* ==========================================================================
-   SISTEMA VISUAL UBER (MONOCROMATICO, TEMA CLARO) - SISTEMA DE INVENTARIO
+   SISTEMA VISUAL UBER (MONOCROMATICO) - SISTEMA DE INVENTARIO
    Identidad visual de referencia: negro, blanco y escala de grises.
    Sin degradados ni sombras exageradas. Radio base de 8px.
+   Incluye tema claro (por defecto) y tema oscuro ([data-theme="dark"]).
    ========================================================================== */
 
 :root {
+  color-scheme: light;
+
   /* Paleta base monocromatica */
   --color-black: #000000;
   --color-white: #ffffff;
@@ -16,11 +19,32 @@
   --color-gray-dark: #333333;
   --color-gray-hover: #efefef;
 
-  /* Superficies y fondos */
-  --color-bg: #f5f5f6;
-  --color-surface: #ffffff;
-  --color-surface-muted: #fafafa;
-  --color-row-hover: #fafafa;
+  /* Tokens semanticos (cambian con el tema) */
+  --bg: #f5f5f6;
+  --surface: #ffffff;
+  --surface-muted: #fafafa;
+  --surface-hover: #f6f6f6;
+  --row-hover: #fafafa;
+  --border: #e5e5e5;
+  --border-strong: #767676;
+  --text-primary: #000000;
+  --text-strong: #333333;
+  --text-secondary: #5e5e5e;
+  --text-soft: #afafaf;
+  --primary-bg: #000000;
+  --primary-text: #ffffff;
+  --primary-bg-hover: #1f1f1f;
+  --on-primary-muted: #c9c9c9;
+  --on-primary-border: rgba(255, 255, 255, 0.45);
+  --navbar-bg: #000000;
+  --input-bg: #ffffff;
+  --input-disabled-bg: #f6f6f6;
+  --disabled-bg: #d8d8d8;
+  --disabled-text: #ffffff;
+  --backdrop: rgba(0, 0, 0, 0.45);
+  --scrollbar-thumb: #d4d4d4;
+  --scrollbar-thumb-hover: #b5b5b5;
+  --focus-ring: 0 0 0 3px rgba(0, 0, 0, 0.12);
 
   /* Acentos semanticos (uso minimo y funcional para estados) */
   --color-success: #067647;
@@ -49,6 +73,52 @@
   --transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Tema oscuro: misma identidad monocromatica, superficies y textos invertidos. */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-muted: #1b1b1b;
+  --surface-hover: #232323;
+  --row-hover: #1b1b1b;
+  --border: #2a2a2a;
+  --border-strong: #4d4d4d;
+  --text-primary: #ffffff;
+  --text-strong: #d6d6d6;
+  --text-secondary: #a1a1a1;
+  --text-soft: #6e6e6e;
+  --primary-bg: #ffffff;
+  --primary-text: #000000;
+  --primary-bg-hover: #e2e2e2;
+  --on-primary-muted: #5e5e5e;
+  --on-primary-border: rgba(0, 0, 0, 0.35);
+  --navbar-bg: #0f0f0f;
+  --input-bg: #1b1b1b;
+  --input-disabled-bg: #232323;
+  --disabled-bg: #333333;
+  --disabled-text: #8a8a8a;
+  --backdrop: rgba(0, 0, 0, 0.65);
+  --scrollbar-thumb: #3a3a3a;
+  --scrollbar-thumb-hover: #4d4d4d;
+  --focus-ring: 0 0 0 3px rgba(255, 255, 255, 0.18);
+
+  --color-success: #6ee7a8;
+  --color-success-bg: #10281b;
+  --color-success-border: #1f5c3a;
+  --color-danger: #fca5a5;
+  --color-danger-bg: #2a1414;
+  --color-danger-border: #6b2020;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #2a2110;
+  --color-warning-border: #6b4d12;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.6);
+  --ring: 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -61,8 +131,8 @@ html {
 
 body {
   font-family: var(--font-family);
-  background-color: var(--color-bg);
-  color: var(--color-black);
+  background-color: var(--bg);
+  color: var(--text-primary);
   line-height: 1.55;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
@@ -76,8 +146,8 @@ a {
 }
 
 ::selection {
-  background-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
 }
 
 /* Barra de desplazamiento discreta */
@@ -89,12 +159,12 @@ a {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #d4d4d4;
+  background-color: var(--scrollbar-thumb);
   border-radius: var(--radius-pill);
-  border: 2px solid var(--color-bg);
+  border: 2px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #b5b5b5;
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* ==========================================================================
@@ -102,13 +172,13 @@ a {
    ========================================================================== */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
-  color: var(--color-black);
+  color: var(--text-primary);
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
 
 p {
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .page-title {
@@ -124,7 +194,7 @@ p {
 }
 
 .text-muted {
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .text-right {
@@ -162,7 +232,7 @@ p {
 }
 
 .page-subtitle {
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
   font-size: 14px;
   margin-top: 4px;
 }
@@ -197,9 +267,9 @@ p {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: var(--color-black);
-  color: var(--color-white);
-  border: 1px solid var(--color-black);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  border: 1px solid var(--primary-bg);
   border-radius: var(--radius-uber);
   padding: 10px 18px;
   font-size: 14px;
@@ -214,8 +284,8 @@ p {
 }
 
 .btn-uber:hover:not(:disabled) {
-  background-color: #1f1f1f;
-  border-color: #1f1f1f;
+  background-color: var(--primary-bg-hover);
+  border-color: var(--primary-bg-hover);
 }
 
 .btn-uber:active:not(:disabled) {
@@ -228,33 +298,33 @@ p {
 }
 
 .btn-uber:disabled {
-  background-color: #d8d8d8;
-  border-color: #d8d8d8;
-  color: var(--color-white);
+  background-color: var(--disabled-bg);
+  border-color: var(--disabled-bg);
+  color: var(--disabled-text);
   cursor: not-allowed;
 }
 
 .btn-uber-outline {
-  background-color: var(--color-white);
-  color: var(--color-black);
-  border: 1px solid var(--color-gray-border-dark);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
 }
 
 .btn-uber-outline:hover:not(:disabled) {
-  background-color: var(--color-gray-light);
-  color: var(--color-black);
-  border-color: var(--color-black);
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--primary-bg);
 }
 
 /* Boton de accion activo (p. ej. la operacion abierta en Movimientos). */
 .btn-uber-outline.is-active {
-  background-color: var(--color-black);
-  color: var(--color-white);
-  border-color: var(--color-black);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  border-color: var(--primary-bg);
 }
 
 .btn-uber-danger {
-  background-color: var(--color-white);
+  background-color: var(--surface);
   color: var(--color-danger);
   border: 1px solid var(--color-danger-border);
 }
@@ -284,7 +354,7 @@ p {
 .form-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-gray-dark);
+  color: var(--text-strong);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -292,9 +362,9 @@ p {
 .form-control,
 .form-select {
   width: 100%;
-  background-color: var(--color-white);
-  color: var(--color-black);
-  border: 1px solid var(--color-gray-border-dark);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-uber);
   padding: 10px 12px;
   font-size: 14px;
@@ -305,24 +375,24 @@ p {
 .form-control:focus,
 .form-select:focus {
   outline: none;
-  border-color: var(--color-black);
-  box-shadow: var(--ring);
+  border-color: var(--primary-bg);
+  box-shadow: var(--focus-ring);
 }
 
 .form-control::placeholder {
-  color: var(--color-gray-soft);
+  color: var(--text-soft);
 }
 
 .form-control:disabled,
 .form-select:disabled {
-  background-color: var(--color-gray-light);
-  color: var(--color-gray-secondary);
+  background-color: var(--input-disabled-bg);
+  color: var(--text-secondary);
   cursor: not-allowed;
 }
 
 .form-hint {
   font-size: 12px;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .form-error {
@@ -340,15 +410,15 @@ p {
    TARJETAS
    ========================================================================== */
 .card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-gray-border);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-uber);
   padding: 20px;
   box-shadow: var(--shadow-xs);
 }
 
 .card-muted {
-  background-color: var(--color-gray-light);
+  background-color: var(--surface-hover);
 }
 
 .card-header {
@@ -360,8 +430,8 @@ p {
 }
 
 .stat-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-gray-border);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-uber);
   padding: 18px;
 }
@@ -371,7 +441,7 @@ p {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .stat-value {
@@ -417,7 +487,7 @@ p {
   flex-wrap: wrap;
   font-size: 14px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-gray-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .lista-alertas li:last-child {
@@ -451,9 +521,9 @@ p {
   flex-direction: column;
   gap: 8px;
   padding: 16px 18px;
-  border: 1px solid var(--color-gray-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-uber);
-  background-color: var(--color-surface-muted);
+  background-color: var(--surface-muted);
 }
 
 .flujo-nodo-cabecera {
@@ -469,7 +539,7 @@ p {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1px solid var(--color-gray-border-dark);
+  border: 1px solid var(--border-strong);
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
@@ -481,7 +551,7 @@ p {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .flujo-valor {
@@ -493,14 +563,14 @@ p {
 
 .flujo-nota {
   font-size: 12px;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .flujo-flecha {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-gray-soft);
+  color: var(--text-soft);
   font-size: 20px;
   line-height: 1;
   flex: none;
@@ -509,16 +579,16 @@ p {
 
 /* Nodo central resaltado: el inventario actual. */
 .flujo-nodo-destacado {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-bg);
+  border-color: var(--primary-bg);
+  color: var(--primary-text);
 }
 .flujo-nodo-destacado .flujo-etiqueta,
 .flujo-nodo-destacado .flujo-nota {
-  color: #c9c9c9;
+  color: var(--on-primary-muted);
 }
 .flujo-nodo-destacado .flujo-icono {
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: var(--on-primary-border);
 }
 
 /* Chips con la direccion del movimiento (sube, baja, corrige). */
@@ -544,9 +614,9 @@ p {
   color: var(--color-danger);
 }
 .direccion-ajusta {
-  background-color: var(--color-gray-light);
-  border: 1px solid var(--color-gray-border);
-  color: var(--color-gray-dark);
+  background-color: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text-strong);
 }
 
 /* Banda de proceso: explica en 3 pasos que hace la operacion. */
@@ -557,9 +627,9 @@ p {
   flex-wrap: wrap;
   padding: 12px 16px;
   margin-bottom: 18px;
-  border: 1px solid var(--color-gray-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-uber);
-  background-color: var(--color-surface);
+  background-color: var(--surface);
   box-shadow: var(--shadow-xs);
 }
 
@@ -569,7 +639,7 @@ p {
   gap: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-gray-dark);
+  color: var(--text-strong);
 }
 
 .proceso-num {
@@ -579,15 +649,15 @@ p {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   font-size: 12px;
   font-weight: 700;
   flex: none;
 }
 
 .proceso-sep {
-  color: var(--color-gray-soft);
+  color: var(--text-soft);
   font-size: 15px;
   line-height: 1;
 }
@@ -599,7 +669,7 @@ p {
   gap: 10px;
   margin: 22px 0 14px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-gray-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .form-seccion-num {
@@ -609,8 +679,8 @@ p {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   font-size: 12px;
   font-weight: 700;
   flex: none;
@@ -624,7 +694,7 @@ p {
   gap: 4px;
   flex-wrap: wrap;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--color-gray-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .tab {
@@ -635,18 +705,18 @@ p {
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .tab:hover {
-  color: var(--color-black);
+  color: var(--text-primary);
 }
 
 .tab.is-active {
-  color: var(--color-black);
-  border-bottom-color: var(--color-black);
+  color: var(--text-primary);
+  border-bottom-color: var(--primary-bg);
 }
 
 /* ==========================================================================
@@ -655,9 +725,9 @@ p {
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--color-gray-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-uber);
-  background-color: var(--color-surface);
+  background-color: var(--surface);
 }
 
 .table {
@@ -673,17 +743,17 @@ p {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-gray-secondary);
-  background-color: var(--color-surface-muted);
+  color: var(--text-secondary);
+  background-color: var(--surface-muted);
   padding: 12px 14px;
-  border-bottom: 1px solid var(--color-gray-border);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .table tbody td {
   padding: 12px 14px;
-  border-bottom: 1px solid var(--color-gray-border);
-  color: var(--color-black);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
   vertical-align: middle;
 }
 
@@ -692,13 +762,13 @@ p {
 }
 
 .table tbody tr:hover {
-  background-color: var(--color-row-hover);
+  background-color: var(--row-hover);
 }
 
 .table-empty {
   padding: 32px 16px;
   text-align: center;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 /* ==========================================================================
@@ -713,9 +783,9 @@ p {
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
-  border: 1px solid var(--color-gray-border);
-  background-color: var(--color-gray-light);
-  color: var(--color-gray-dark);
+  border: 1px solid var(--border);
+  background-color: var(--surface-muted);
+  color: var(--text-strong);
   white-space: nowrap;
 }
 
@@ -759,15 +829,15 @@ p {
 }
 
 .badge-ajuste {
-  background-color: var(--color-gray-light);
-  border-color: var(--color-gray-border);
-  color: var(--color-gray-dark);
+  background-color: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-strong);
 }
 
 .badge-neutral {
-  background-color: var(--color-gray-light);
-  border-color: var(--color-gray-border);
-  color: var(--color-gray-dark);
+  background-color: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-strong);
 }
 
 /* ==========================================================================
@@ -779,10 +849,10 @@ p {
   gap: 10px;
   padding: 12px 14px;
   border-radius: var(--radius-uber);
-  border: 1px solid var(--color-gray-border);
-  background-color: var(--color-gray-light);
+  border: 1px solid var(--border);
+  background-color: var(--surface-muted);
   font-size: 14px;
-  color: var(--color-gray-dark);
+  color: var(--text-strong);
 }
 
 .alert-success {
@@ -832,8 +902,8 @@ p {
 .spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid var(--color-gray-border);
-  border-top-color: var(--color-black);
+  border: 2px solid var(--border);
+  border-top-color: var(--primary-bg);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -874,8 +944,8 @@ p {
 .auth-card {
   width: 100%;
   max-width: 420px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-gray-border);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 32px 28px;
   box-shadow: var(--shadow-sm);
@@ -892,8 +962,8 @@ p {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-uber);
-  background-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   font-weight: 700;
   font-size: 15px;
   margin-bottom: 18px;
@@ -903,10 +973,11 @@ p {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.03em;
+  color: var(--text-primary);
 }
 
 .auth-subtitle {
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
   font-size: 14px;
   margin: 4px 0 22px;
 }
@@ -917,16 +988,16 @@ p {
   gap: 10px;
   margin-top: 20px;
   padding-top: 18px;
-  border-top: 1px solid var(--color-gray-border);
+  border-top: 1px solid var(--border);
   font-size: 13px;
 }
 
 .auth-links a {
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .auth-links a:hover {
-  color: var(--color-black);
+  color: var(--text-primary);
   text-decoration: underline;
 }
 
@@ -941,11 +1012,11 @@ p {
 .auth-legal {
   margin-top: 14px;
   font-size: 12px;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
 }
 
 .auth-legal a {
-  color: var(--color-black);
+  color: var(--text-primary);
   text-decoration: underline;
 }
 
@@ -961,6 +1032,33 @@ p {
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   align-items: start;
+}
+
+/* ==========================================================================
+   REPORTES
+   Filtros de periodo y contenido del reporte.
+   ========================================================================== */
+.reportes-filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-uber);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.campo-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo-fecha .form-control {
+  max-width: 180px;
 }
 
 /* ==========================================================================
@@ -987,7 +1085,7 @@ p {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
 }
@@ -995,7 +1093,7 @@ p {
 .checkbox-inline input {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-black);
+  accent-color: var(--primary-bg);
   cursor: pointer;
 }
 
@@ -1007,40 +1105,13 @@ p {
 }
 
 /* ==========================================================================
-   REPORTES
-   Filtros de periodo y contenido del reporte.
-   ========================================================================== */
-.reportes-filtros {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-gray-border);
-  border-radius: var(--radius-uber);
-  background-color: var(--color-surface);
-  box-shadow: var(--shadow-xs);
-}
-
-.campo-fecha {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.campo-fecha .form-control {
-  max-width: 180px;
-}
-
-/* ==========================================================================
    MODAL
    ========================================================================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: var(--backdrop);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -1051,7 +1122,7 @@ p {
 .modal-panel {
   width: 100%;
   max-width: 560px;
-  background-color: var(--color-surface);
+  background-color: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   animation: modal-in 0.16s ease-out;
@@ -1068,14 +1139,14 @@ p {
   justify-content: space-between;
   gap: 12px;
   padding: 18px 22px;
-  border-bottom: 1px solid var(--color-gray-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .modal-close {
   background: transparent;
   border: none;
   font-size: 16px;
-  color: var(--color-gray-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -1083,8 +1154,8 @@ p {
 }
 
 .modal-close:hover {
-  background-color: var(--color-gray-light);
-  color: var(--color-black);
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .modal-body {
@@ -1124,7 +1195,7 @@ p {
 .linea-subtotal {
   text-align: right;
   font-weight: 600;
-  color: var(--color-gray-dark);
+  color: var(--text-strong);
 }
 
 .total-entrada {
@@ -1134,7 +1205,7 @@ p {
   gap: 14px;
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid var(--color-gray-border);
+  border-top: 1px solid var(--border);
 }
 
 .total-valor {
@@ -1144,7 +1215,7 @@ p {
 }
 
 .detalle-fila {
-  background-color: var(--color-surface-muted);
+  background-color: var(--surface-muted);
   padding: 0 !important;
 }
 
@@ -1162,7 +1233,7 @@ p {
     grid-template-columns: 1fr 1fr;
     gap: 8px 10px;
     padding-bottom: 12px;
-    border-bottom: 1px dashed var(--color-gray-border);
+    border-bottom: 1px dashed var(--border);
   }
   .linea-entrada .linea-subtotal {
     grid-column: 1 / 2;
