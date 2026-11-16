@@ -24,6 +24,7 @@ export class NavbarComponent {
     { ruta: '/dashboard', etiqueta: 'Panel' },
     { ruta: '/productos', etiqueta: 'Productos' },
     { ruta: '/movimientos', etiqueta: 'Movimientos' },
+    { ruta: '/reportes', etiqueta: 'Reportes' },
     { ruta: '/perfil', etiqueta: 'Perfil' },
   ];
 
