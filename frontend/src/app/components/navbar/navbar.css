@@ -201,4 +201,14 @@
   .user-chip {
     display: none;
   }
+
+  /* En el navbar publico (sin sesion) el nombre completo no cabe junto a los
+     enlaces "Iniciar sesion" y "Crear cuenta": se conserva solo la marca "SI". */
+  .navbar-public .brand-text {
+    display: none;
+  }
+
+  .navbar-public .navbar-container {
+    padding: 0 14px;
+  }
 }
