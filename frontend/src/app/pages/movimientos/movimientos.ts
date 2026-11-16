@@ -7,6 +7,7 @@ import { ProveedorService } from '../../services/proveedor.service';
 import { EntradaService } from '../../services/entrada.service';
 import { SalidaService } from '../../services/salida.service';
 import { AjusteService } from '../../services/ajuste.service';
+import { AlertaService } from '../../services/alerta.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { ahoraLocalInput, aISO, fechaHora } from '../../core/fecha.utils';
 import { formatoCantidad, formatoMoneda, numero } from '../../core/formato.utils';
@@ -446,6 +447,7 @@ export class MovimientosComponent implements OnInit {
   private entradaService = inject(EntradaService);
   private salidaService = inject(SalidaService);
   private ajusteService = inject(AjusteService);
+  private alertas = inject(AlertaService);
 
   readonly formatoCantidad = formatoCantidad;
   readonly formatoMoneda = formatoMoneda;
@@ -660,6 +662,7 @@ export class MovimientosComponent implements OnInit {
           this.itemsCompra.push(this.crearLineaCompra());
           this.cargarCombos();
           this.cargar();
+          this.alertas.cargar();
         },
         error: (e) => {
           this.errorForm.set(mensajeError(e, 'No se pudo registrar la compra.'));
@@ -704,6 +707,7 @@ export class MovimientosComponent implements OnInit {
           this.productoVenta.set(null);
           this.cargarCombos();
           this.cargar();
+          this.alertas.cargar();
         },
         error: (e) => {
           this.errorForm.set(mensajeError(e, 'No se pudo registrar la venta.'));
@@ -753,6 +757,7 @@ export class MovimientosComponent implements OnInit {
           this.productoAjuste.set(null);
           this.cargarCombos();
           this.cargar();
+          this.alertas.cargar();
         },
         error: (e) => {
           this.errorForm.set(mensajeError(e, 'No se pudo registrar el ajuste.'));
