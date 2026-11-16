@@ -1,6 +1,7 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Categoria, Producto, Proveedor } from '../../models';
 import { ProductoService } from '../../services/producto.service';
@@ -338,6 +339,7 @@ export class ProductosComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
   private proveedorService = inject(ProveedorService);
   private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
 
   readonly unidades = [
     'unidad',
@@ -400,6 +402,11 @@ export class ProductosComponent implements OnInit {
     this.filtroCategoria.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.cargar());
+
+    // Permite abrir la lista ya filtrada, por ejemplo desde las alertas del Panel.
+    if (this.route.snapshot.queryParamMap.get('bajoStock') === '1') {
+      this.soloBajoStock.set(true);
+    }
 
     this.cargarCombos();
     this.cargar();

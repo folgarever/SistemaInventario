@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { ProductoService } from '../../services/producto.service';
+import { AlertaService } from '../../services/alerta.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { fechaHora } from '../../core/fecha.utils';
 import { fechaArchivo, fechaHoraArchivo, generarPdf } from '../../core/pdf.utils';
@@ -179,7 +180,16 @@ import { ResumenDashboard } from '../../models';
                   </li>
                 }
               </ul>
-              <a routerLink="/movimientos" class="btn-uber btn-uber-outline btn-sm mt-16">Reabastecer</a>
+              <div class="flex gap-8 mt-16 flex-wrap">
+                <a
+                  routerLink="/productos"
+                  [queryParams]="{ bajoStock: 1 }"
+                  class="btn-uber btn-uber-outline btn-sm"
+                >
+                  Ver todos ({{ r.alertas.total }})
+                </a>
+                <a routerLink="/movimientos" class="btn-uber btn-uber-outline btn-sm">Reabastecer</a>
+              </div>
             }
           </div>
         </div>
@@ -243,6 +253,7 @@ export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private dashboardService = inject(DashboardService);
   private productoService = inject(ProductoService);
+  private alertas = inject(AlertaService);
 
   readonly formatoMoneda = formatoMoneda;
   readonly formatoCantidad = formatoCantidad;
@@ -263,6 +274,7 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.resumen().subscribe({
       next: (res) => {
         this.resumen.set(res.data);
+        this.alertas.sincronizar(res.data.alertas);
         this.cargando.set(false);
       },
       error: (e) => {
