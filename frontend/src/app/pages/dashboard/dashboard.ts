@@ -2,12 +2,22 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { ProductoService } from '../../services/producto.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { fechaHora } from '../../core/fecha.utils';
-import { formatoCantidad, formatoMoneda, numero } from '../../core/formato.utils';
+import { descargarCsv, fechaArchivo } from '../../core/csv.utils';
+import {
+  estadoStock,
+  etiquetaEstadoStock,
+  formatoCantidad,
+  formatoMoneda,
+  ganancia,
+  margenGanancia,
+  numero,
+} from '../../core/formato.utils';
 import { ResumenDashboard } from '../../models';
 
-// Panel principal: totales, valor del inventario, alertas de stock y los
+// Panel principal: totales, ganancia potencial, alertas de stock y los
 // movimientos mas recientes.
 @Component({
   selector: 'app-dashboard',
@@ -20,7 +30,12 @@ import { ResumenDashboard } from '../../models';
           <h1 class="page-title">Hola, {{ usuario()?.nombres ?? 'bienvenido' }}</h1>
           <p class="page-subtitle">Resumen general de tu inventario.</p>
         </div>
-        <a routerLink="/perfil" class="btn-uber btn-uber-outline btn-sm">Mi perfil</a>
+        <div class="actions">
+          <button type="button" class="btn-uber btn-uber-outline" [disabled]="exportando()" (click)="exportar()">
+            Exportar inventario
+          </button>
+          <a routerLink="/perfil" class="btn-uber btn-uber-outline">Mi perfil</a>
+        </div>
       </div>
 
       @if (error()) {
@@ -38,16 +53,22 @@ import { ResumenDashboard } from '../../models';
             <div class="stat-value">{{ r.totales.productos }}</div>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Categorías</span>
-            <div class="stat-value">{{ r.totales.categorias }}</div>
+            <span class="stat-label">Unidades en existencia</span>
+            <div class="stat-value stat-value-sm font-mono">
+              {{ formatoCantidad(r.inventario.unidades) }}
+            </div>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Proveedores</span>
-            <div class="stat-value">{{ r.totales.proveedores }}</div>
+            <span class="stat-label">Valor a precio de venta</span>
+            <div class="stat-value stat-value-sm font-mono">
+              {{ formatoMoneda(r.inventario.valorVenta) }}
+            </div>
           </div>
           <div class="stat-card">
-            <span class="stat-label">Movimientos</span>
-            <div class="stat-value">{{ r.totales.movimientos }}</div>
+            <span class="stat-label">Ganancia potencial</span>
+            <div class="stat-value stat-value-sm font-mono ganancia-positiva">
+              {{ formatoMoneda(gananciaPotencial(r)) }}
+            </div>
           </div>
         </div>
 
@@ -60,11 +81,11 @@ import { ResumenDashboard } from '../../models';
             <div class="flujo-nodo">
               <div class="flujo-nodo-cabecera">
                 <span class="flujo-icono" aria-hidden="true">↑</span>
-                <span class="flujo-etiqueta">Entradas</span>
+                <span class="flujo-etiqueta">Compras</span>
               </div>
               <span class="flujo-valor font-mono">+{{ formatoCantidad(r.flujo.unidadesEntrada) }}</span>
               <span class="flujo-nota">
-                {{ r.flujo.entradas }} operación(es) · compras y reabastecimientos
+                {{ r.flujo.entradas }} operación(es) · reabastecimientos
               </span>
             </div>
 
@@ -86,11 +107,11 @@ import { ResumenDashboard } from '../../models';
             <div class="flujo-nodo">
               <div class="flujo-nodo-cabecera">
                 <span class="flujo-icono" aria-hidden="true">↓</span>
-                <span class="flujo-etiqueta">Salidas</span>
+                <span class="flujo-etiqueta">Ventas</span>
               </div>
               <span class="flujo-valor font-mono">−{{ formatoCantidad(r.flujo.unidadesSalida) }}</span>
               <span class="flujo-nota">
-                {{ r.flujo.salidas }} operación(es) · {{ r.flujo.ajustes }} ajuste(s) de conteo
+                {{ r.flujo.salidas }} operación(es) · {{ r.flujo.ajustes }} ajuste(s)
               </span>
             </div>
           </div>
@@ -120,13 +141,18 @@ import { ResumenDashboard } from '../../models';
                   {{ formatoMoneda(r.inventario.valorVenta) }}
                 </div>
               </div>
+              <div>
+                <span class="stat-label">Ganancia potencial</span>
+                <div class="stat-value stat-value-sm font-mono ganancia-positiva">
+                  {{ formatoMoneda(gananciaPotencial(r)) }}
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="card">
             <div class="card-header">
               <h2 class="section-title">Alertas de stock</h2>
-              <a routerLink="/alertas" class="btn-uber btn-uber-outline btn-sm">Ver todo</a>
             </div>
             @if (r.alertas.total === 0) {
               <p class="text-muted">No hay productos con stock bajo. Todo en orden.</p>
@@ -153,6 +179,7 @@ import { ResumenDashboard } from '../../models';
                   </li>
                 }
               </ul>
+              <a routerLink="/movimientos" class="btn-uber btn-uber-outline btn-sm mt-16">Reabastecer</a>
             }
           </div>
         </div>
@@ -183,10 +210,10 @@ import { ResumenDashboard } from '../../models';
                       <td>
                         @switch (m.tipo) {
                           @case ('ENTRADA') {
-                            <span class="badge badge-entrada"><span class="badge-dot"></span>↑ Entrada</span>
+                            <span class="badge badge-entrada"><span class="badge-dot"></span>↑ Compra</span>
                           }
                           @case ('SALIDA') {
-                            <span class="badge badge-salida"><span class="badge-dot"></span>↓ Salida</span>
+                            <span class="badge badge-salida"><span class="badge-dot"></span>↓ Venta</span>
                           }
                           @default {
                             <span class="badge badge-ajuste"><span class="badge-dot"></span>⇄ Ajuste</span>
@@ -215,6 +242,7 @@ import { ResumenDashboard } from '../../models';
 export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private dashboardService = inject(DashboardService);
+  private productoService = inject(ProductoService);
 
   readonly formatoMoneda = formatoMoneda;
   readonly formatoCantidad = formatoCantidad;
@@ -226,6 +254,7 @@ export class DashboardComponent implements OnInit {
   resumen = signal<ResumenDashboard | null>(null);
   cargando = signal(false);
   error = signal<string | null>(null);
+  exportando = signal(false);
 
   ngOnInit(): void {
     this.cargando.set(true);
@@ -239,6 +268,42 @@ export class DashboardComponent implements OnInit {
       error: (e) => {
         this.error.set(mensajeError(e, 'No se pudo cargar el resumen.'));
         this.cargando.set(false);
+      },
+    });
+  }
+
+  gananciaPotencial(r: ResumenDashboard): number {
+    return ganancia(r.inventario.valorVenta, r.inventario.valorCompra);
+  }
+
+  // Exporta un reporte sencillo del inventario a CSV.
+  exportar(): void {
+    this.exportando.set(true);
+    this.productoService.listar({ incluirInactivos: true }).subscribe({
+      next: (res) => {
+        const filas: (string | number)[][] = [
+          ['SKU', 'Producto', 'Unidad', 'Costo', 'Precio venta', 'Ganancia unidad', 'Margen %', 'Existencias', 'Valor venta', 'Estado'],
+        ];
+        for (const p of res.data.items) {
+          filas.push([
+            p.sku,
+            p.nombre,
+            p.unidad_medida,
+            numero(p.precio_compra),
+            numero(p.precio_venta),
+            ganancia(p.precio_venta, p.precio_compra),
+            Math.round(margenGanancia(p.precio_venta, p.precio_compra) * 10) / 10,
+            numero(p.stock),
+            numero(p.stock) * numero(p.precio_venta),
+            etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
+          ]);
+        }
+        descargarCsv(`inventario-${fechaArchivo()}.csv`, filas);
+        this.exportando.set(false);
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e, 'No se pudo exportar el inventario.'));
+        this.exportando.set(false);
       },
     });
   }
