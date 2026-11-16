@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { AlertaService } from '../../services/alerta.service';
 
 interface EnlaceNav {
   ruta: string;
@@ -19,6 +20,7 @@ interface EnlaceNav {
 export class NavbarComponent {
   readonly titulo = 'Sistema de Inventario';
   readonly auth = inject(AuthService);
+  readonly alertas = inject(AlertaService);
 
   readonly enlaces: EnlaceNav[] = [
     { ruta: '/dashboard', etiqueta: 'Panel' },
@@ -29,6 +31,17 @@ export class NavbarComponent {
   ];
 
   menuAbierto = signal(false);
+
+  constructor() {
+    // Carga el conteo de alertas al iniciar sesion y lo limpia al salir.
+    effect(() => {
+      if (this.auth.isAuthenticated()) {
+        this.alertas.cargar();
+      } else {
+        this.alertas.limpiar();
+      }
+    });
+  }
 
   alternarMenu(): void {
     this.menuAbierto.update((v) => !v);

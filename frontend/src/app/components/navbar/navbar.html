@@ -25,7 +25,16 @@
             routerLinkActive="is-active"
             class="navbar-link"
             (click)="cerrarMenu()"
-          >{{ enlace.etiqueta }}</a>
+          >
+            {{ enlace.etiqueta }}
+            @if (enlace.ruta === '/productos' && alertas.total() > 0) {
+              <span
+                class="navbar-badge"
+                [class.navbar-badge-agotado]="alertas.agotados() > 0"
+                [title]="alertas.total() + ' producto(s) con stock bajo'"
+              >{{ alertas.total() }}</span>
+            }
+          </a>
         }
       </div>
 
