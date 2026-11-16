@@ -88,6 +88,11 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
               {{ cargando() ? 'Creando cuenta…' : 'Crear cuenta' }}
             </button>
           </div>
+
+          <p class="auth-legal">
+            Al crear la cuenta confirmas que leíste el
+            <a routerLink="/aviso-privacidad">aviso de privacidad</a>.
+          </p>
         </form>
 
         <div class="auth-links">
