@@ -22,15 +22,8 @@ export class NavbarComponent {
 
   readonly enlaces: EnlaceNav[] = [
     { ruta: '/dashboard', etiqueta: 'Panel' },
-    { ruta: '/categorias', etiqueta: 'Categorías' },
-    { ruta: '/proveedores', etiqueta: 'Proveedores' },
     { ruta: '/productos', etiqueta: 'Productos' },
-    { ruta: '/entradas', etiqueta: 'Entradas' },
-    { ruta: '/salidas', etiqueta: 'Salidas' },
-    { ruta: '/ajustes', etiqueta: 'Ajustes' },
     { ruta: '/movimientos', etiqueta: 'Movimientos' },
-    { ruta: '/alertas', etiqueta: 'Alertas' },
-    { ruta: '/reportes', etiqueta: 'Reportes' },
     { ruta: '/perfil', etiqueta: 'Perfil' },
   ];
 

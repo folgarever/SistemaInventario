@@ -1,9 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
-// Rutas de la aplicacion. Los modulos se iran agregando por etapas
-// (productos, categorias, proveedores, entradas, salidas, ajustes,
-// movimientos y reportes).
+// Rutas de la aplicacion. El sistema es sencillo: Panel, Productos,
+// Movimientos y Perfil, ademas de las pantallas de acceso.
 export const routes: Routes = [
   {
     path: '',
@@ -38,51 +37,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilComponent),
   },
   {
-    path: 'categorias',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/categorias/categorias').then((m) => m.CategoriasComponent),
-  },
-  {
-    path: 'proveedores',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/proveedores/proveedores').then((m) => m.ProveedoresComponent),
-  },
-  {
     path: 'productos',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/productos/productos').then((m) => m.ProductosComponent),
-  },
-  {
-    path: 'entradas',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/entradas/entradas').then((m) => m.EntradasComponent),
-  },
-  {
-    path: 'salidas',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/salidas/salidas').then((m) => m.SalidasComponent),
-  },
-  {
-    path: 'ajustes',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/ajustes/ajustes').then((m) => m.AjustesComponent),
   },
   {
     path: 'movimientos',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/movimientos/movimientos').then((m) => m.MovimientosComponent),
-  },
-  {
-    path: 'alertas',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/alertas/alertas').then((m) => m.AlertasComponent),
-  },
-  {
-    path: 'reportes',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/reportes/reportes').then((m) => m.ReportesComponent),
   },
   {
     path: '**',
