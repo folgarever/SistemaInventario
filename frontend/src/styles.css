@@ -246,6 +246,13 @@ p {
   border-color: var(--color-black);
 }
 
+/* Boton de accion activo (p. ej. la operacion abierta en Movimientos). */
+.btn-uber-outline.is-active {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  border-color: var(--color-black);
+}
+
 .btn-uber-danger {
   background-color: var(--color-white);
   color: var(--color-danger);
