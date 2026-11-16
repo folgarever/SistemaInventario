@@ -8,7 +8,7 @@ import { CategoriaService } from '../../services/categoria.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { ModalComponent } from '../../components/modal/modal';
 import { mensajeError } from '../../core/api-error.utils';
-import { descargarCsv, fechaArchivo } from '../../core/csv.utils';
+import { fechaArchivo, generarPdf } from '../../core/pdf.utils';
 import {
   estadoStock,
   etiquetaEstadoStock,
@@ -31,8 +31,13 @@ import {
           <p class="page-subtitle">Costo, precio de venta, ganancia y existencias de cada producto.</p>
         </div>
         <div class="actions">
-          <button type="button" class="btn-uber btn-uber-outline" [disabled]="productos().length === 0" (click)="exportar()">
-            Exportar CSV
+          <button
+            type="button"
+            class="btn-uber btn-uber-outline"
+            [disabled]="productos().length === 0 || exportando()"
+            (click)="exportar()"
+          >
+            {{ exportando() ? 'Generando…' : 'Exportar PDF' }}
           </button>
           <button type="button" class="btn-uber" (click)="abrirCrear()">Nuevo producto</button>
         </div>
@@ -365,6 +370,7 @@ export class ProductosComponent implements OnInit {
   editando = signal<Producto | null>(null);
   guardando = signal(false);
   errorForm = signal<string | null>(null);
+  exportando = signal(false);
 
   // Creación rápida de categorías y proveedores desde el propio formulario.
   nuevaCategoriaAbierta = signal(false);
@@ -637,41 +643,66 @@ export class ProductosComponent implements OnInit {
     });
   }
 
-  exportar(): void {
-    const filas: (string | number)[][] = [
-      [
-        'SKU',
-        'Producto',
-        'Categoría',
-        'Proveedor',
-        'Unidad',
-        'Costo',
-        'Precio venta',
-        'Ganancia unidad',
-        'Margen %',
-        'Existencias',
-        'Stock mínimo',
-        'Estado',
-      ],
-    ];
+  // Exporta el listado visible de productos a un PDF.
+  async exportar(): Promise<void> {
+    const productos = this.productos();
+    if (productos.length === 0) return;
 
-    for (const p of this.productos()) {
-      filas.push([
-        p.sku,
-        p.nombre,
-        p.categoria?.nombre ?? '',
-        p.proveedor?.nombre ?? '',
-        p.unidad_medida,
-        numero(p.precio_compra),
-        numero(p.precio_venta),
-        ganancia(p.precio_venta, p.precio_compra),
-        Math.round(margenGanancia(p.precio_venta, p.precio_compra) * 10) / 10,
-        numero(p.stock),
-        numero(p.stock_minimo),
-        etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
-      ]);
+    this.exportando.set(true);
+    try {
+      const filas = productos.map((p) => ({
+        sku: p.sku,
+        producto: p.nombre,
+        categoria: p.categoria?.nombre ?? '—',
+        proveedor: p.proveedor?.nombre ?? '—',
+        unidad: p.unidad_medida,
+        costo: formatoMoneda(p.precio_compra),
+        venta: formatoMoneda(p.precio_venta),
+        ganancia: formatoMoneda(ganancia(p.precio_venta, p.precio_compra)),
+        margen: `${formatoCantidad(margenGanancia(p.precio_venta, p.precio_compra))} %`,
+        existencias: formatoCantidad(p.stock),
+        stock_minimo: formatoCantidad(p.stock_minimo),
+        estado: etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
+      }));
+
+      const valorTotal = productos.reduce(
+        (total, p) => total + numero(p.stock) * numero(p.precio_venta),
+        0,
+      );
+
+      await generarPdf({
+        titulo: 'Listado de productos',
+        meta: [`Productos: ${productos.length}`],
+        resumen: [
+          { etiqueta: 'Productos', valor: String(productos.length) },
+          { etiqueta: 'Valor a precio de venta', valor: formatoMoneda(valorTotal) },
+        ],
+        secciones: [
+          {
+            columnas: [
+              { encabezado: 'SKU', clave: 'sku' },
+              { encabezado: 'Producto', clave: 'producto' },
+              { encabezado: 'Categoría', clave: 'categoria' },
+              { encabezado: 'Proveedor', clave: 'proveedor' },
+              { encabezado: 'Unidad', clave: 'unidad' },
+              { encabezado: 'Costo', clave: 'costo', alineacion: 'right' },
+              { encabezado: 'Precio venta', clave: 'venta', alineacion: 'right' },
+              { encabezado: 'Ganancia', clave: 'ganancia', alineacion: 'right' },
+              { encabezado: 'Margen', clave: 'margen', alineacion: 'right' },
+              { encabezado: 'Existencias', clave: 'existencias', alineacion: 'right' },
+              { encabezado: 'Stock mínimo', clave: 'stock_minimo', alineacion: 'right' },
+              { encabezado: 'Estado', clave: 'estado' },
+            ],
+            filas,
+          },
+        ],
+        nombreArchivo: `productos-${fechaArchivo()}.pdf`,
+        horizontal: true,
+      });
+    } catch {
+      this.error.set('No se pudo generar el PDF de productos.');
+    } finally {
+      this.exportando.set(false);
     }
-
-    descargarCsv(`productos-${fechaArchivo()}.csv`, filas);
   }
 }

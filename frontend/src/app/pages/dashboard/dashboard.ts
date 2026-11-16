@@ -5,7 +5,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { ProductoService } from '../../services/producto.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { fechaHora } from '../../core/fecha.utils';
-import { descargarCsv, fechaArchivo } from '../../core/csv.utils';
+import { fechaArchivo, fechaHoraArchivo, generarPdf } from '../../core/pdf.utils';
 import {
   estadoStock,
   etiquetaEstadoStock,
@@ -32,7 +32,7 @@ import { ResumenDashboard } from '../../models';
         </div>
         <div class="actions">
           <button type="button" class="btn-uber btn-uber-outline" [disabled]="exportando()" (click)="exportar()">
-            Exportar inventario
+            {{ exportando() ? 'Generando…' : 'Exportar PDF' }}
           </button>
           <a routerLink="/perfil" class="btn-uber btn-uber-outline">Mi perfil</a>
         </div>
@@ -276,30 +276,64 @@ export class DashboardComponent implements OnInit {
     return ganancia(r.inventario.valorVenta, r.inventario.valorCompra);
   }
 
-  // Exporta un reporte sencillo del inventario a CSV.
+  // Exporta el inventario completo a un PDF con las mismas columnas que la
+  // tabla de productos.
   exportar(): void {
     this.exportando.set(true);
     this.productoService.listar({ incluirInactivos: true }).subscribe({
-      next: (res) => {
-        const filas: (string | number)[][] = [
-          ['SKU', 'Producto', 'Unidad', 'Costo', 'Precio venta', 'Ganancia unidad', 'Margen %', 'Existencias', 'Valor venta', 'Estado'],
-        ];
-        for (const p of res.data.items) {
-          filas.push([
-            p.sku,
-            p.nombre,
-            p.unidad_medida,
-            numero(p.precio_compra),
-            numero(p.precio_venta),
-            ganancia(p.precio_venta, p.precio_compra),
-            Math.round(margenGanancia(p.precio_venta, p.precio_compra) * 10) / 10,
-            numero(p.stock),
-            numero(p.stock) * numero(p.precio_venta),
-            etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
-          ]);
+      next: async (res) => {
+        const productos = res.data.items;
+        const filas = productos.map((p) => ({
+          sku: p.sku,
+          producto: p.nombre,
+          unidad: p.unidad_medida,
+          costo: formatoMoneda(p.precio_compra),
+          venta: formatoMoneda(p.precio_venta),
+          ganancia: formatoMoneda(ganancia(p.precio_venta, p.precio_compra)),
+          margen: `${formatoCantidad(margenGanancia(p.precio_venta, p.precio_compra))} %`,
+          existencias: formatoCantidad(p.stock),
+          valor: formatoMoneda(numero(p.stock) * numero(p.precio_venta)),
+          estado: etiquetaEstadoStock(estadoStock(p.stock, p.stock_minimo)),
+        }));
+
+        const valorTotal = productos.reduce(
+          (total, p) => total + numero(p.stock) * numero(p.precio_venta),
+          0,
+        );
+
+        try {
+          await generarPdf({
+            titulo: 'Inventario de productos',
+            meta: [`Generado el ${fechaHoraArchivo()}`],
+            resumen: [
+              { etiqueta: 'Productos', valor: String(productos.length) },
+              { etiqueta: 'Valor a precio de venta', valor: formatoMoneda(valorTotal) },
+            ],
+            secciones: [
+              {
+                columnas: [
+                  { encabezado: 'SKU', clave: 'sku' },
+                  { encabezado: 'Producto', clave: 'producto' },
+                  { encabezado: 'Unidad', clave: 'unidad' },
+                  { encabezado: 'Costo', clave: 'costo', alineacion: 'right' },
+                  { encabezado: 'Precio venta', clave: 'venta', alineacion: 'right' },
+                  { encabezado: 'Ganancia', clave: 'ganancia', alineacion: 'right' },
+                  { encabezado: 'Margen', clave: 'margen', alineacion: 'right' },
+                  { encabezado: 'Existencias', clave: 'existencias', alineacion: 'right' },
+                  { encabezado: 'Valor venta', clave: 'valor', alineacion: 'right' },
+                  { encabezado: 'Estado', clave: 'estado' },
+                ],
+                filas,
+              },
+            ],
+            nombreArchivo: `inventario-${fechaArchivo()}.pdf`,
+            horizontal: true,
+          });
+        } catch {
+          this.error.set('No se pudo generar el PDF del inventario.');
+        } finally {
+          this.exportando.set(false);
         }
-        descargarCsv(`inventario-${fechaArchivo()}.csv`, filas);
-        this.exportando.set(false);
       },
       error: (e) => {
         this.error.set(mensajeError(e, 'No se pudo exportar el inventario.'));
