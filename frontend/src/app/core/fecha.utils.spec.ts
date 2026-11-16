@@ -4,8 +4,12 @@ import {
   dentroDeRango,
   fechaCorta,
   fechaHora,
+  finDiaISO,
   hoyInput,
+  inicioDiaISO,
+  primerDiaMesAnteriorInput,
   primerDiaMesInput,
+  ultimoDiaMesAnteriorInput,
 } from './fecha.utils';
 
 describe('aISO', () => {
@@ -44,6 +48,33 @@ describe('hoyInput y primerDiaMesInput', () => {
   it('devuelven formatos válidos para input date', () => {
     expect(hoyInput()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(primerDiaMesInput()).toMatch(/^\d{4}-\d{2}-01$/);
+  });
+});
+
+describe('rango del mes anterior', () => {
+  it('devuelve fechas válidas y coherentes', () => {
+    expect(primerDiaMesAnteriorInput()).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(ultimoDiaMesAnteriorInput()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(primerDiaMesAnteriorInput() < ultimoDiaMesAnteriorInput()).toBe(true);
+  });
+});
+
+describe('inicioDiaISO y finDiaISO', () => {
+  it('devuelven undefined para valores vacíos o inválidos', () => {
+    expect(inicioDiaISO('')).toBeUndefined();
+    expect(inicioDiaISO(null)).toBeUndefined();
+    expect(finDiaISO(undefined)).toBeUndefined();
+    expect(inicioDiaISO('no-es-fecha')).toBeUndefined();
+  });
+
+  it('cubren el día completo del calendario local', () => {
+    const inicio = new Date(inicioDiaISO('2026-06-15')!);
+    const fin = new Date(finDiaISO('2026-06-15')!);
+    expect(inicio.getHours()).toBe(0);
+    expect(inicio.getMinutes()).toBe(0);
+    expect(fin.getHours()).toBe(23);
+    expect(fin.getMinutes()).toBe(59);
+    expect(fin.getTime()).toBeGreaterThan(inicio.getTime());
   });
 });
 

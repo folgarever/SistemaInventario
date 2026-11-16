@@ -30,6 +30,34 @@ export function primerDiaMesInput(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`;
 }
 
+// Primer dia del mes anterior en formato <input type="date">.
+export function primerDiaMesAnteriorInput(): string {
+  const d = new Date();
+  const anterior = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+  return `${anterior.getFullYear()}-${pad(anterior.getMonth() + 1)}-01`;
+}
+
+// Ultimo dia del mes anterior en formato <input type="date">.
+export function ultimoDiaMesAnteriorInput(): string {
+  const d = new Date();
+  const ultimo = new Date(d.getFullYear(), d.getMonth(), 0);
+  return `${ultimo.getFullYear()}-${pad(ultimo.getMonth() + 1)}-${pad(ultimo.getDate())}`;
+}
+
+// Inicio del dia local de un valor <input type="date">, convertido a ISO (UTC).
+export function inicioDiaISO(valorLocal: string | null | undefined): string | undefined {
+  if (!valorLocal) return undefined;
+  const d = new Date(`${valorLocal}T00:00:00`);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+// Fin del dia local de un valor <input type="date">, convertido a ISO (UTC).
+export function finDiaISO(valorLocal: string | null | undefined): string | undefined {
+  if (!valorLocal) return undefined;
+  const d = new Date(`${valorLocal}T23:59:59.999`);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
 // Formatea una fecha ISO a "dd/mm/aaaa" para mostrar en tablas y reportes.
 export function fechaCorta(valor?: string | null): string {
   if (!valor) return '-';
