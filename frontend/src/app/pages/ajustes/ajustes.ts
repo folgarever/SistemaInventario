@@ -29,6 +29,15 @@ interface OpcionMotivo {
         </button>
       </div>
 
+      <div class="proceso">
+        <span class="direccion direccion-ajusta">⇄ Corrige el stock</span>
+        <span class="proceso-paso"><span class="proceso-num">1</span> Elige el producto a revisar</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">2</span> Ingresa las existencias contadas</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">3</span> El sistema corrige la diferencia</span>
+      </div>
+
       @if (mostrarForm()) {
         <div class="card mb-16">
           <div class="card-header">

@@ -12,9 +12,9 @@
   justify-content: space-between;
   gap: 16px;
   width: 100%;
-  max-width: 1240px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 clamp(16px, 2.2vw, 40px);
+  padding: 0 clamp(20px, 2.6vw, 64px);
   min-height: 60px;
   position: relative;
 }
@@ -176,7 +176,7 @@
     align-items: stretch;
     justify-content: flex-start;
     gap: 2px;
-    padding: 10px clamp(16px, 2.2vw, 40px) 16px;
+    padding: 10px clamp(20px, 2.6vw, 64px) 16px;
     background-color: var(--color-black);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: var(--shadow-md);

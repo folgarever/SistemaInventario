@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import {
   AlertaStock,
   AlertasDashboard,
+  FlujoDashboard,
   ResumenDashboard,
   TotalesDashboard,
 } from '../types/dashboard';
@@ -109,13 +110,54 @@ export class DashboardService {
     return this.construirAlertas(productos);
   }
 
+  // Resume el flujo de inventario: cantidad de operaciones y unidades que
+  // entraron o salieron. Permite visualizar el proceso en el panel principal.
+  private static async flujo(userId: string): Promise<FlujoDashboard> {
+    const { data, error } = await supabase
+      .from('movimientos_inventario')
+      .select('tipo, cantidad')
+      .eq('user_id', userId);
+
+    if (error) {
+      throw mapearErrorBd(error, 'Error al calcular el flujo de inventario');
+    }
+
+    let entradas = 0;
+    let salidas = 0;
+    let ajustes = 0;
+    let unidadesEntrada = 0;
+    let unidadesSalida = 0;
+
+    for (const m of (data ?? []) as { tipo: string; cantidad: number | string }[]) {
+      const cantidad = aNumero(m.cantidad);
+      if (m.tipo === 'ENTRADA') {
+        entradas += 1;
+        unidadesEntrada += cantidad;
+      } else if (m.tipo === 'SALIDA') {
+        salidas += 1;
+        unidadesSalida += Math.abs(cantidad);
+      } else {
+        ajustes += 1;
+      }
+    }
+
+    return {
+      entradas,
+      salidas,
+      ajustes,
+      unidadesEntrada: redondear(unidadesEntrada),
+      unidadesSalida: redondear(unidadesSalida),
+    };
+  }
+
   // Resumen completo para el panel principal.
   static async resumen(userId: string): Promise<ResumenDashboard> {
-    const [productos, totalCategorias, totalProveedores, totalMovimientos] = await Promise.all([
+    const [productos, totalCategorias, totalProveedores, totalMovimientos, flujo] = await Promise.all([
       this.productosActivos(userId),
       this.contar('categorias', userId),
       this.contar('proveedores', userId),
       this.contar('movimientos_inventario', userId),
+      this.flujo(userId),
     ]);
 
     let unidades = 0;
@@ -149,6 +191,7 @@ export class DashboardService {
         valorVenta: redondear(valorVenta),
       },
       alertas,
+      flujo,
       movimientosRecientes: recientes.items as MovimientoPublico[],
     };
   }

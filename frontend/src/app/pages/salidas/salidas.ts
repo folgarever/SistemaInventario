@@ -29,6 +29,15 @@ interface OpcionMotivo {
         </button>
       </div>
 
+      <div class="proceso">
+        <span class="direccion direccion-baja">↓ Baja el stock</span>
+        <span class="proceso-paso"><span class="proceso-num">1</span> Elige el producto y la cantidad</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">2</span> Indica el motivo (venta, merma, uso…)</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">3</span> Se descuenta y queda en el historial</span>
+      </div>
+
       @if (mostrarForm()) {
         <div class="card mb-16">
           <div class="card-header">

@@ -51,6 +51,51 @@ import { ResumenDashboard } from '../../models';
           </div>
         </div>
 
+        <div class="card mb-16">
+          <div class="card-header">
+            <h2 class="section-title">Flujo de inventario</h2>
+            <span class="text-muted">Cómo se mueve tu stock</span>
+          </div>
+          <div class="flujo">
+            <div class="flujo-nodo">
+              <div class="flujo-nodo-cabecera">
+                <span class="flujo-icono" aria-hidden="true">↑</span>
+                <span class="flujo-etiqueta">Entradas</span>
+              </div>
+              <span class="flujo-valor font-mono">+{{ formatoCantidad(r.flujo.unidadesEntrada) }}</span>
+              <span class="flujo-nota">
+                {{ r.flujo.entradas }} operación(es) · compras y reabastecimientos
+              </span>
+            </div>
+
+            <div class="flujo-flecha" aria-hidden="true">→</div>
+
+            <div class="flujo-nodo flujo-nodo-destacado">
+              <div class="flujo-nodo-cabecera">
+                <span class="flujo-icono" aria-hidden="true">▤</span>
+                <span class="flujo-etiqueta">Inventario actual</span>
+              </div>
+              <span class="flujo-valor font-mono">{{ formatoCantidad(r.inventario.unidades) }}</span>
+              <span class="flujo-nota">
+                unidades disponibles · {{ formatoMoneda(r.inventario.valorCompra) }} a costo
+              </span>
+            </div>
+
+            <div class="flujo-flecha" aria-hidden="true">→</div>
+
+            <div class="flujo-nodo">
+              <div class="flujo-nodo-cabecera">
+                <span class="flujo-icono" aria-hidden="true">↓</span>
+                <span class="flujo-etiqueta">Salidas</span>
+              </div>
+              <span class="flujo-valor font-mono">−{{ formatoCantidad(r.flujo.unidadesSalida) }}</span>
+              <span class="flujo-nota">
+                {{ r.flujo.salidas }} operación(es) · {{ r.flujo.ajustes }} ajuste(s) de conteo
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div class="dashboard-columnas mb-16">
           <div class="card">
             <div class="card-header">
@@ -138,13 +183,13 @@ import { ResumenDashboard } from '../../models';
                       <td>
                         @switch (m.tipo) {
                           @case ('ENTRADA') {
-                            <span class="badge badge-disponible"><span class="badge-dot"></span>Entrada</span>
+                            <span class="badge badge-entrada"><span class="badge-dot"></span>↑ Entrada</span>
                           }
                           @case ('SALIDA') {
-                            <span class="badge badge-bajo"><span class="badge-dot"></span>Salida</span>
+                            <span class="badge badge-salida"><span class="badge-dot"></span>↓ Salida</span>
                           }
                           @default {
-                            <span class="badge badge-agotado"><span class="badge-dot"></span>Ajuste</span>
+                            <span class="badge badge-ajuste"><span class="badge-dot"></span>⇄ Ajuste</span>
                           }
                         }
                       </td>

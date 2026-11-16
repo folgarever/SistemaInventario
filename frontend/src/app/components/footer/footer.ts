@@ -27,7 +27,7 @@ import { Component } from '@angular/core';
         margin-top: 40px;
         border-top: 1px solid var(--color-gray-border);
         background-color: var(--color-surface);
-        padding: 24px clamp(16px, 2.2vw, 44px) 28px;
+        padding: 24px clamp(20px, 2.6vw, 64px) 28px;
       }
       .footer-inner {
         display: flex;

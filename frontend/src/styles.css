@@ -142,12 +142,14 @@ p {
 
 /* ==========================================================================
    LAYOUT
+   El contenido ocupa todo el ancho disponible y se adapta al tamano de la
+   pantalla; el padding lateral es fluido para que respire en pantallas grandes.
    ========================================================================== */
 .page-container {
   width: 100%;
-  max-width: 1240px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 28px clamp(16px, 2.2vw, 40px) 40px;
+  padding: 28px clamp(20px, 2.6vw, 64px) 44px;
 }
 
 .page-header {
@@ -170,7 +172,21 @@ p {
   gap: 16px;
 }
 .grid-cards {
-  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+}
+
+/* Seccion con separador: agrupa contenido relacionado dentro de una pagina. */
+.seccion {
+  margin-top: 28px;
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
 }
 
 /* ==========================================================================
@@ -410,6 +426,190 @@ p {
 }
 
 /* ==========================================================================
+   PROCESOS: FLUJO DE INVENTARIO Y PASOS
+   Ayudan a entender de un vistazo como se mueve el inventario y en que orden
+   se ejecuta cada operacion (entradas, salidas y ajustes).
+   ========================================================================== */
+.flujo {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.flujo-nodo {
+  flex: 1 1 190px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-uber);
+  background-color: var(--color-surface-muted);
+}
+
+.flujo-nodo-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flujo-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-gray-border-dark);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  flex: none;
+}
+
+.flujo-etiqueta {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-secondary);
+}
+
+.flujo-valor {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.flujo-nota {
+  font-size: 12px;
+  color: var(--color-gray-secondary);
+}
+
+.flujo-flecha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-soft);
+  font-size: 20px;
+  line-height: 1;
+  flex: none;
+  padding: 0 2px;
+}
+
+/* Nodo central resaltado: el inventario actual. */
+.flujo-nodo-destacado {
+  background-color: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+.flujo-nodo-destacado .flujo-etiqueta,
+.flujo-nodo-destacado .flujo-nota {
+  color: #c9c9c9;
+}
+.flujo-nodo-destacado .flujo-icono {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Chips con la direccion del movimiento (sube, baja, corrige). */
+.direccion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.direccion-sube {
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success);
+}
+.direccion-baja {
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger);
+}
+.direccion-ajusta {
+  background-color: var(--color-gray-light);
+  border: 1px solid var(--color-gray-border);
+  color: var(--color-gray-dark);
+}
+
+/* Banda de proceso: explica en 3 pasos que hace la operacion. */
+.proceso {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--color-gray-border);
+  border-radius: var(--radius-uber);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.proceso-paso {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-dark);
+}
+
+.proceso-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+
+.proceso-sep {
+  color: var(--color-gray-soft);
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Encabezado de bloque dentro de un formulario. */
+.form-seccion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-gray-border);
+}
+
+.form-seccion-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+
+/* ==========================================================================
    PESTANAS (TABS)
    ========================================================================== */
 .tabs {
@@ -538,6 +738,25 @@ p {
   color: var(--color-danger);
 }
 
+/* Tipos de movimiento: entrada (sube), salida (baja), ajuste (corrige). */
+.badge-entrada {
+  background-color: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+
+.badge-salida {
+  background-color: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.badge-ajuste {
+  background-color: var(--color-gray-light);
+  border-color: var(--color-gray-border);
+  color: var(--color-gray-dark);
+}
+
 .badge-neutral {
   background-color: var(--color-gray-light);
   border-color: var(--color-gray-border);
@@ -623,6 +842,11 @@ p {
   .page-title { font-size: 24px; }
   .page-container { padding: 20px 16px 32px; }
   .stat-value { font-size: 24px; }
+  .flujo { flex-direction: column; }
+  .flujo-flecha { transform: rotate(90deg); padding: 2px 0; }
+  .proceso { gap: 8px 10px; }
+  .proceso-sep { display: none; }
+  .proceso-paso { flex: 1 1 100%; }
 }
 
 @media (max-width: 560px) {
@@ -727,14 +951,13 @@ p {
 .toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
 .toolbar .form-control {
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .toolbar .form-select {

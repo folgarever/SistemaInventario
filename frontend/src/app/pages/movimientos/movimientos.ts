@@ -74,13 +74,13 @@ interface OpcionTipo {
                   <td>
                     @switch (m.tipo) {
                       @case ('ENTRADA') {
-                        <span class="badge badge-disponible"><span class="badge-dot"></span>Entrada</span>
+                        <span class="badge badge-entrada"><span class="badge-dot"></span>↑ Entrada</span>
                       }
                       @case ('SALIDA') {
-                        <span class="badge badge-bajo"><span class="badge-dot"></span>Salida</span>
+                        <span class="badge badge-salida"><span class="badge-dot"></span>↓ Salida</span>
                       }
                       @default {
-                        <span class="badge badge-agotado"><span class="badge-dot"></span>Ajuste</span>
+                        <span class="badge badge-ajuste"><span class="badge-dot"></span>⇄ Ajuste</span>
                       }
                     }
                   </td>

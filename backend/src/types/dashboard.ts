@@ -30,9 +30,20 @@ export interface AlertasDashboard {
   items: AlertaStock[];
 }
 
+// Resumen del flujo de inventario: cuantas operaciones y unidades entraron y
+// salieron. Sirve para mostrar el proceso (entradas -> inventario -> salidas).
+export interface FlujoDashboard {
+  entradas: number;
+  salidas: number;
+  ajustes: number;
+  unidadesEntrada: number;
+  unidadesSalida: number;
+}
+
 export interface ResumenDashboard {
   totales: TotalesDashboard;
   inventario: InventarioDashboard;
   alertas: AlertasDashboard;
+  flujo: FlujoDashboard;
   movimientosRecientes: unknown[];
 }

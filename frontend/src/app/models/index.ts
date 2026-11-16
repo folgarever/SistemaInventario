@@ -196,10 +196,19 @@ export interface AlertasDashboard {
   items: AlertaStock[];
 }
 
+export interface FlujoDashboard {
+  entradas: number;
+  salidas: number;
+  ajustes: number;
+  unidadesEntrada: number | string;
+  unidadesSalida: number | string;
+}
+
 export interface ResumenDashboard {
   totales: TotalesDashboard;
   inventario: InventarioDashboard;
   alertas: AlertasDashboard;
+  flujo: FlujoDashboard;
   movimientosRecientes: Movimiento[];
 }
 

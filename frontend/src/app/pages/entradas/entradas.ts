@@ -25,6 +25,15 @@ import { nuevoUuid } from '../../core/uuid.utils';
         </button>
       </div>
 
+      <div class="proceso">
+        <span class="direccion direccion-sube">↑ Sube el stock</span>
+        <span class="proceso-paso"><span class="proceso-num">1</span> Elige el proveedor y los productos</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">2</span> Indica cantidad y costo</span>
+        <span class="proceso-sep">→</span>
+        <span class="proceso-paso"><span class="proceso-num">3</span> Se suma al inventario y al historial</span>
+      </div>
+
       @if (mostrarForm()) {
         <div class="card mb-16">
           <div class="card-header">
@@ -39,6 +48,11 @@ import { nuevoUuid } from '../../core/uuid.utils';
           }
 
           <form [formGroup]="form" (ngSubmit)="registrar()">
+            <div class="form-seccion">
+              <span class="form-seccion-num">1</span>
+              <h3 class="section-title">Datos de la entrada</h3>
+            </div>
+
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label" for="proveedor_id">Proveedor</label>
@@ -60,7 +74,10 @@ import { nuevoUuid } from '../../core/uuid.utils';
               <textarea id="observaciones" class="form-control" rows="2" formControlName="observaciones"></textarea>
             </div>
 
-            <h3 class="section-title mt-8">Productos</h3>
+            <div class="form-seccion">
+              <span class="form-seccion-num">2</span>
+              <h3 class="section-title">Productos de la entrada</h3>
+            </div>
 
             <div class="lineas" formArrayName="items">
               @for (linea of items.controls; track $index; let i = $index) {
