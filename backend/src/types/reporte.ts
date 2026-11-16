@@ -39,3 +39,29 @@ export interface ReporteMovimientos {
     unidadesSalida: number;
   };
 }
+
+export interface ReporteVentasItem {
+  producto_id: string;
+  nombre: string;
+  sku: string;
+  unidad_medida: string;
+  unidades: number;
+  precio_venta: number;
+  precio_compra: number;
+  ingreso: number;
+  costo: number;
+  ganancia: number;
+  margen: number;
+}
+
+export interface ReporteVentas {
+  items: ReporteVentasItem[];
+  totales: {
+    operaciones: number;
+    unidades: number;
+    ingreso: number;
+    costo: number;
+    ganancia: number;
+    margen: number;
+  };
+}

@@ -3,6 +3,8 @@ import {
   ReporteInventario,
   ReporteInventarioItem,
   ReporteMovimientos,
+  ReporteVentas,
+  ReporteVentasItem,
 } from '../types/reporte';
 import { MovimientoPublico } from '../types/movimiento';
 import { sanitizeFilterValue } from '../utils/sanitize';
@@ -37,6 +39,25 @@ export interface FiltrosMovimientos {
   hasta?: string;
   tipo?: string;
   productoId?: string;
+}
+
+export interface FiltrosVentas {
+  desde?: string;
+  hasta?: string;
+  productoId?: string;
+}
+
+interface SalidaParaVenta {
+  cantidad: number | string;
+  fecha: string;
+  producto?: {
+    id: string;
+    nombre: string;
+    sku: string;
+    unidad_medida: string;
+    precio_venta: number | string;
+    precio_compra: number | string;
+  } | null;
 }
 
 function aNumero(valor: number | string | null | undefined): number {
@@ -181,6 +202,103 @@ export class ReporteService {
         ajustes,
         unidadesEntrada: redondear(unidadesEntrada),
         unidadesSalida: redondear(unidadesSalida),
+      },
+    };
+  }
+
+  // Reporte de ventas y ganancia por producto en un rango de fechas.
+  //
+  // Nota: la tabla de salidas no conserva el precio aplicado en el momento de
+  // la venta, por lo que el ingreso y la ganancia se calculan con los precios
+  // actuales de cada producto. Es una estimacion util para la tienda, no un
+  // cierre contable exacto.
+  static async ventas(userId: string, filtros: FiltrosVentas): Promise<ReporteVentas> {
+    let query = supabase
+      .from('salidas_inventario')
+      .select(
+        'cantidad, fecha, producto:productos(id, nombre, sku, unidad_medida, precio_venta, precio_compra)'
+      )
+      .eq('user_id', userId)
+      .eq('motivo', 'VENTA');
+
+    if (filtros.productoId) {
+      query = query.eq('producto_id', sanitizeFilterValue(filtros.productoId));
+    }
+    if (filtros.desde) {
+      query = query.gte('fecha', filtros.desde);
+    }
+    if (filtros.hasta) {
+      query = query.lte('fecha', filtros.hasta);
+    }
+
+    query = query.order('fecha', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) {
+      throw mapearErrorBd(error, 'Error al generar el reporte de ventas');
+    }
+
+    const salidas = (data as unknown as SalidaParaVenta[]) ?? [];
+    const porProducto = new Map<string, ReporteVentasItem>();
+    let operaciones = 0;
+
+    for (const salida of salidas) {
+      const p = salida.producto;
+      if (!p) continue;
+
+      const cantidad = aNumero(salida.cantidad);
+      operaciones += 1;
+
+      let item = porProducto.get(p.id);
+      if (!item) {
+        item = {
+          producto_id: p.id,
+          nombre: p.nombre,
+          sku: p.sku,
+          unidad_medida: p.unidad_medida,
+          unidades: 0,
+          precio_venta: aNumero(p.precio_venta),
+          precio_compra: aNumero(p.precio_compra),
+          ingreso: 0,
+          costo: 0,
+          ganancia: 0,
+          margen: 0,
+        };
+        porProducto.set(p.id, item);
+      }
+      item.unidades += cantidad;
+    }
+
+    const items = Array.from(porProducto.values())
+      .map((item) => {
+        item.unidades = redondear(item.unidades);
+        item.ingreso = redondear(item.unidades * item.precio_venta);
+        item.costo = redondear(item.unidades * item.precio_compra);
+        item.ganancia = redondear(item.ingreso - item.costo);
+        item.margen = item.ingreso > 0 ? redondear((item.ganancia / item.ingreso) * 100) : 0;
+        return item;
+      })
+      .sort((a, b) => b.ingreso - a.ingreso);
+
+    let unidades = 0;
+    let ingreso = 0;
+    let costo = 0;
+    for (const item of items) {
+      unidades += item.unidades;
+      ingreso += item.ingreso;
+      costo += item.costo;
+    }
+    const ganancia = redondear(ingreso - costo);
+
+    return {
+      items,
+      totales: {
+        operaciones,
+        unidades: redondear(unidades),
+        ingreso: redondear(ingreso),
+        costo: redondear(costo),
+        ganancia,
+        margen: ingreso > 0 ? redondear((ganancia / ingreso) * 100) : 0,
       },
     };
   }

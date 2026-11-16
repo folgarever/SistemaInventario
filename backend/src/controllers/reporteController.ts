@@ -34,4 +34,17 @@ export class ReporteController {
       next(err);
     }
   }
+
+  static async ventas(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const reporte = await ReporteService.ventas(req.user!.id, {
+        desde: req.query.desde as string | undefined,
+        hasta: req.query.hasta as string | undefined,
+        productoId: req.query.productoId as string | undefined,
+      });
+      res.status(200).json({ success: true, data: reporte });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
