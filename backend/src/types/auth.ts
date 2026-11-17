@@ -26,8 +26,6 @@ export interface UsuarioPublico {
   email: string;
   username: string;
   activo: boolean;
-  email_verificado: boolean;
-  email_verificado_en?: string | null;
   created_at?: string;
 }
 

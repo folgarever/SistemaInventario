@@ -89,10 +89,6 @@ describe('AuthService (validaciones varias)', () => {
     await assert.rejects(() => AuthService.eliminarCuenta('u1', ''), /confirmar su contraseña/i);
   });
 
-  it('verificarEmail rechaza un token vacío', async () => {
-    await assert.rejects(() => AuthService.verificarEmail(''), /enlace/i);
-  });
-
   it('restablecerPassword rechaza un token vacío', async () => {
     await assert.rejects(
       () => AuthService.restablecerPassword({ token: '', passwordNueva: 'abcd1234' }),

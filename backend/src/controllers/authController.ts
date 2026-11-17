@@ -115,48 +115,6 @@ export class AuthController {
     }
   }
 
-  static async solicitarVerificacionEmail(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const resultado = await AuthService.solicitarVerificacionEmail(req.user!.id);
-
-      if (resultado.yaVerificado) {
-        res.status(200).json({
-          success: true,
-          message: 'Tu correo ya estaba verificado.',
-        });
-        return;
-      }
-
-      res.status(200).json({
-        success: true,
-        message: resultado.enviado
-          ? 'Te enviamos un enlace para verificar tu correo.'
-          : 'No se pudo enviar el correo en este momento. Intenta más tarde.',
-        data: { enviado: resultado.enviado },
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async verificarEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { token } = req.body;
-      await AuthService.verificarEmail(token);
-
-      res.status(200).json({
-        success: true,
-        message: 'Correo verificado exitosamente.',
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
-
   static async eliminarCuenta(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { password } = req.body;

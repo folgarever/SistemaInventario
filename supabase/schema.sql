@@ -25,17 +25,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
-    -- Verificación del correo. Es informativa: no bloquea el acceso, solo
-    -- indica en el perfil si el correo fue confirmado por su dueño.
-    email_verificado BOOLEAN NOT NULL DEFAULT FALSE,
-    email_verificado_en TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- Añade las columnas de verificación si la tabla ya existía sin ellas.
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado_en TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(LOWER(username));
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(LOWER(email));
@@ -55,23 +47,6 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_reset_user ON password_reset_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_reset_hash ON password_reset_tokens(token_hash);
-
--- =============================================================================
--- 1c. TOKENS DE VERIFICACIÓN DE CORREO
--- Igual que los tokens de restablecimiento: se guarda el hash SHA-256, nunca
--- el token en claro. Un token solo puede usarse una vez y tiene caducidad.
--- =============================================================================
-CREATE TABLE IF NOT EXISTS email_verification_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    token_hash VARCHAR(255) NOT NULL,
-    expira_at TIMESTAMPTZ NOT NULL,
-    usado BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_verif_user ON email_verification_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_verif_hash ON email_verification_tokens(token_hash);
 
 -- =============================================================================
 -- 2. CATEGORIAS
@@ -335,7 +310,7 @@ BEGIN
     DELETE FROM productos WHERE user_id = p_user_id;
     DELETE FROM proveedores WHERE user_id = p_user_id;
     DELETE FROM categorias WHERE user_id = p_user_id;
-    -- Los tokens de restablecimiento y de verificación caen en cascada.
+    -- Los tokens de restablecimiento caen en cascada.
     DELETE FROM usuarios WHERE id = p_user_id;
 END;
 $$;
@@ -349,7 +324,6 @@ $$;
 -- =============================================================================
 ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
 ALTER TABLE password_reset_tokens DISABLE ROW LEVEL SECURITY;
-ALTER TABLE email_verification_tokens DISABLE ROW LEVEL SECURITY;
 ALTER TABLE categorias DISABLE ROW LEVEL SECURITY;
 ALTER TABLE proveedores DISABLE ROW LEVEL SECURITY;
 ALTER TABLE productos DISABLE ROW LEVEL SECURITY;

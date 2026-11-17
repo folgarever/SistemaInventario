@@ -23,14 +23,12 @@ router.post('/register', limiteCredenciales, AuthController.registrar);
 router.post('/login', limiteCredenciales, AuthController.login);
 router.post('/forgot-password', limiteRecuperacion, AuthController.solicitarRestablecimiento);
 router.post('/reset-password', limiteRecuperacion, AuthController.restablecerPassword);
-router.post('/verify-email', limiteRecuperacion, AuthController.verificarEmail);
 router.post('/logout', AuthController.logout);
 
 // Rutas protegidas
 router.get('/profile', authenticateToken, AuthController.perfil);
 router.put('/profile', authenticateToken, AuthController.actualizarPerfil);
 router.put('/password', authenticateToken, AuthController.cambiarPassword);
-router.post('/verify-email/request', limiteRecuperacion, authenticateToken, AuthController.solicitarVerificacionEmail);
 router.delete('/account', authenticateToken, AuthController.eliminarCuenta);
 
 export default router;
