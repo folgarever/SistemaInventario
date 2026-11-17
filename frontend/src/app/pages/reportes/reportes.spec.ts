@@ -87,4 +87,33 @@ describe('ReportesComponent', () => {
     expect(fixture.componentInstance.claseEstado('BAJO')).toContain('badge-bajo');
     expect(fixture.componentInstance.claseEstado('DISPONIBLE')).toContain('badge-disponible');
   });
+
+  it('construye la lista de reposición al cambiar a esa pestaña', () => {
+    const fixture = TestBed.createComponent(ReportesComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.cambiarPestana('reposicion');
+
+    expect(servicio.inventario).toHaveBeenCalledWith({ soloBajoStock: true });
+    const lista = fixture.componentInstance.reposicion();
+    expect(lista?.totales.productos).toBe(1);
+    expect(lista?.totales.bajoStock).toBe(1);
+    // stock 3, mínimo 5 -> objetivo 10, sugerido 7; costo 7 * 6 = 42
+    expect(lista?.items[0].sugerido).toBe(7);
+    expect(lista?.items[0].costo_estimado).toBe(42);
+  });
+
+  it('renderiza la tabla de reposición con la cantidad sugerida', () => {
+    const fixture = TestBed.createComponent(ReportesComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.cambiarPestana('reposicion');
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Productos a reponer');
+    expect(texto).toContain('Costo estimado de reposición');
+    expect(texto).toContain('Sugerido');
+    expect(texto).toContain('Café');
+  });
 });

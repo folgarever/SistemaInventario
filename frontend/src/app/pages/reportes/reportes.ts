@@ -10,10 +10,16 @@ import {
   ultimoDiaMesAnteriorInput,
 } from '../../core/fecha.utils';
 import { formatoCantidad, formatoMoneda } from '../../core/formato.utils';
-import { DocumentoPdf, fechaArchivo, generarPdf } from '../../core/pdf.utils';
+import { DocumentoPdf, fechaArchivo, fechaHoraArchivo, generarPdf } from '../../core/pdf.utils';
+import {
+  agruparPorProveedor,
+  construirListaReposicion,
+  ItemReposicion,
+  ListaReposicion,
+} from '../../core/reposicion.utils';
 import { ReporteInventario, ReporteVentas } from '../../models';
 
-type Pestana = 'ventas' | 'inventario';
+type Pestana = 'ventas' | 'inventario' | 'reposicion';
 
 // Reportes de la tienda: ventas y ganancia por periodo, y valor del inventario.
 // Las exportaciones se generan en PDF con la identidad visual del sistema.
@@ -56,6 +62,14 @@ type Pestana = 'ventas' | 'inventario';
         >
           Inventario
         </button>
+        <button
+          type="button"
+          class="tab"
+          [class.is-active]="pestana() === 'reposicion'"
+          (click)="cambiarPestana('reposicion')"
+        >
+          Reposición
+        </button>
       </div>
 
       <div class="reportes-filtros">
@@ -91,7 +105,7 @@ type Pestana = 'ventas' | 'inventario';
             Mes anterior
           </button>
           <button type="button" class="btn-uber btn-sm" (click)="cargar()">Aplicar</button>
-        } @else {
+        } @else if (pestana() === 'inventario') {
           <label class="checkbox-inline">
             <input
               type="checkbox"
@@ -108,6 +122,11 @@ type Pestana = 'ventas' | 'inventario';
             />
             Incluir inactivos
           </label>
+        } @else {
+          <p class="text-muted">
+            Productos con stock bajo o agotado. La cantidad sugerida repone hasta el doble del stock
+            mínimo de cada producto.
+          </p>
         }
       </div>
 
@@ -233,7 +252,7 @@ type Pestana = 'ventas' | 'inventario';
             </table>
           </div>
         }
-      } @else {
+      } @else if (pestana() === 'inventario') {
         @if (inventario(); as r) {
           <div class="grid grid-cards mb-16">
             <div class="stat-card">
@@ -316,6 +335,76 @@ type Pestana = 'ventas' | 'inventario';
             </table>
           </div>
         }
+      } @else {
+        @if (reposicion(); as lista) {
+          <div class="grid grid-cards mb-16">
+            <div class="stat-card">
+              <span class="stat-label">Productos a reponer</span>
+              <div class="stat-value">{{ lista.totales.productos }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Agotados</span>
+              <div class="stat-value stat-value-sm text-danger">{{ lista.totales.agotados }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Bajo stock</span>
+              <div class="stat-value stat-value-sm">{{ lista.totales.bajoStock }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Costo estimado de reposición</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoMoneda(lista.totales.costoEstimado) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Producto</th>
+                  <th>Proveedor</th>
+                  <th class="text-right">Existencias</th>
+                  <th class="text-right">Stock mínimo</th>
+                  <th class="text-right">Sugerido</th>
+                  <th class="text-right">Costo unitario</th>
+                  <th class="text-right">Costo estimado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of lista.items; track item.id) {
+                  <tr>
+                    <td class="font-mono">{{ item.sku }}</td>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.proveedor || '—' }}</td>
+                    <td class="text-right font-mono">
+                      {{ formatoCantidad(item.stock) }} {{ item.unidad_medida }}
+                    </td>
+                    <td class="text-right font-mono">{{ formatoCantidad(item.stock_minimo) }}</td>
+                    <td class="text-right font-mono font-bold">
+                      {{ formatoCantidad(item.sugerido) }} {{ item.unidad_medida }}
+                    </td>
+                    <td class="text-right font-mono">{{ formatoMoneda(item.precio_compra) }}</td>
+                    <td class="text-right font-mono">{{ formatoMoneda(item.costo_estimado) }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8">
+                      <div class="empty-state">
+                        <span class="empty-state-icon" aria-hidden="true">✓</span>
+                        <span class="empty-state-title">Todo en orden</span>
+                        <span class="empty-state-text">
+                          No hay productos con stock bajo ni agotados.
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       }
     </div>
   `,
@@ -337,6 +426,7 @@ export class ReportesComponent implements OnInit {
 
   ventas = signal<ReporteVentas | null>(null);
   inventario = signal<ReporteInventario | null>(null);
+  reposicion = signal<ListaReposicion | null>(null);
 
   cargando = signal(false);
   error = signal<string | null>(null);
@@ -347,9 +437,9 @@ export class ReportesComponent implements OnInit {
   }
 
   sinDatos(): boolean {
-    return this.pestana() === 'ventas'
-      ? (this.ventas()?.items.length ?? 0) === 0
-      : (this.inventario()?.items.length ?? 0) === 0;
+    if (this.pestana() === 'ventas') return (this.ventas()?.items.length ?? 0) === 0;
+    if (this.pestana() === 'inventario') return (this.inventario()?.items.length ?? 0) === 0;
+    return (this.reposicion()?.items.length ?? 0) === 0;
   }
 
   cambiarPestana(p: Pestana): void {
@@ -391,8 +481,10 @@ export class ReportesComponent implements OnInit {
   cargar(): void {
     if (this.pestana() === 'ventas') {
       this.cargarVentas();
-    } else {
+    } else if (this.pestana() === 'inventario') {
       this.cargarInventario();
+    } else {
+      this.cargarReposicion();
     }
   }
 
@@ -433,6 +525,21 @@ export class ReportesComponent implements OnInit {
       });
   }
 
+  private cargarReposicion(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.reporteService.inventario({ soloBajoStock: true }).subscribe({
+      next: (res) => {
+        this.reposicion.set(construirListaReposicion(res.data.items));
+        this.cargando.set(false);
+      },
+      error: (e) => {
+        this.error.set(mensajeError(e, 'No se pudo cargar la lista de reposición.'));
+        this.cargando.set(false);
+      },
+    });
+  }
+
   claseEstado(estado: string): string {
     if (estado === 'AGOTADO') return 'badge badge-agotado';
     if (estado === 'BAJO') return 'badge badge-bajo';
@@ -450,8 +557,10 @@ export class ReportesComponent implements OnInit {
     try {
       if (this.pestana() === 'ventas') {
         await this.exportarVentas();
-      } else {
+      } else if (this.pestana() === 'inventario') {
         await this.exportarInventario();
+      } else {
+        await this.exportarReposicion();
       }
     } catch {
       this.error.set('No se pudo generar el PDF.');
@@ -555,5 +664,57 @@ export class ReportesComponent implements OnInit {
     };
 
     await generarPdf(documento);
+  }
+
+  private async exportarReposicion(): Promise<void> {
+    const lista = this.reposicion();
+    if (!lista) return;
+
+    const grupos = agruparPorProveedor(lista.items);
+    const columnas = [
+      { encabezado: 'SKU', clave: 'sku' },
+      { encabezado: 'Producto', clave: 'nombre' },
+      { encabezado: 'Existencias', clave: 'stock', alineacion: 'right' as const },
+      { encabezado: 'Stock mínimo', clave: 'stock_minimo', alineacion: 'right' as const },
+      { encabezado: 'Sugerido', clave: 'sugerido', alineacion: 'right' as const },
+      { encabezado: 'Costo unitario', clave: 'precio_compra', alineacion: 'right' as const },
+      { encabezado: 'Costo estimado', clave: 'costo_estimado', alineacion: 'right' as const },
+    ];
+
+    const documento: DocumentoPdf = {
+      titulo: 'Lista de reposición',
+      subtitulo: 'Productos con stock bajo o agotado',
+      meta: [
+        `Generado el ${fechaHoraArchivo()}`,
+        'La cantidad sugerida repone hasta el doble del stock mínimo.',
+      ],
+      resumen: [
+        { etiqueta: 'Productos', valor: String(lista.totales.productos) },
+        { etiqueta: 'Agotados', valor: String(lista.totales.agotados) },
+        { etiqueta: 'Bajo stock', valor: String(lista.totales.bajoStock) },
+        { etiqueta: 'Costo estimado', valor: formatoMoneda(lista.totales.costoEstimado) },
+      ],
+      secciones: grupos.map((grupo) => ({
+        titulo: grupo.proveedor,
+        columnas,
+        filas: grupo.items.map((item) => this.filaReposicion(item)),
+      })),
+      nombreArchivo: `lista-reposicion-${fechaArchivo()}.pdf`,
+      horizontal: true,
+    };
+
+    await generarPdf(documento);
+  }
+
+  private filaReposicion(item: ItemReposicion): Record<string, string> {
+    return {
+      sku: item.sku,
+      nombre: item.nombre,
+      stock: `${formatoCantidad(item.stock)} ${item.unidad_medida}`,
+      stock_minimo: formatoCantidad(item.stock_minimo),
+      sugerido: `${formatoCantidad(item.sugerido)} ${item.unidad_medida}`,
+      precio_compra: formatoMoneda(item.precio_compra),
+      costo_estimado: formatoMoneda(item.costo_estimado),
+    };
   }
 }
