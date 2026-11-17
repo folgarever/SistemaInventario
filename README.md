@@ -41,7 +41,7 @@ SistemaInventario/
 
 | Módulo | Descripción |
 | --- | --- |
-| Autenticación | Registro, inicio de sesión, recuperación y restablecimiento de contraseña, verificación de correo, perfil y eliminación de cuenta. |
+| Autenticación | Registro, inicio de sesión, recuperación y restablecimiento de contraseña, perfil y eliminación de cuenta. |
 | Categorías | Catálogo de categorías con activación/desactivación y borrado seguro. |
 | Proveedores | Catálogo de proveedores con activación/desactivación y borrado seguro. |
 | Productos | Catálogo de productos (SKU, precios, stock mínimo, unidad de medida). El stock solo cambia por movimientos. |
@@ -61,7 +61,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 
 | Recurso | Endpoints |
 | --- | --- |
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/verify-email`, `POST /api/auth/logout`, `GET /api/auth/profile`, `PUT /api/auth/profile`, `PUT /api/auth/password`, `POST /api/auth/verify-email/request`, `DELETE /api/auth/account` |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/logout`, `GET /api/auth/profile`, `PUT /api/auth/profile`, `PUT /api/auth/password`, `DELETE /api/auth/account` |
 | Categorías | `GET/POST /api/categorias`, `GET/PUT/DELETE /api/categorias/:id`, `PATCH /api/categorias/:id/estado` |
 | Proveedores | `GET/POST /api/proveedores`, `GET/PUT/DELETE /api/proveedores/:id`, `PATCH /api/proveedores/:id/estado` |
 | Productos | `GET/POST /api/productos`, `GET/PUT/DELETE /api/productos/:id`, `PATCH /api/productos/:id/estado` |
@@ -78,7 +78,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 - Node.js 20+ (probado con 24).
 - Cuenta de Supabase (base de datos remota).
 - Cuenta de Vercel (despliegue).
-- Cuenta de Resend (envío de correos de recuperación de contraseña y verificación de correo).
+- Cuenta de Resend (envío de correos de recuperación de contraseña).
 
 > No es necesario instalar MySQL ni PostgreSQL localmente: la base de datos vive en Supabase.
 
@@ -155,8 +155,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 - Los movimientos de inventario son inmutables; las correcciones se registran como ajustes.
   (El borrado de una cuenta es la única excepción y ocurre dentro de una función de base de datos.)
 - Idempotencia en entradas, salidas y ajustes mediante `client_request_id`.
-- Verificación de correo mediante enlaces con token de un solo uso (se guarda solo su hash).
-  La eliminación de cuenta exige confirmar la contraseña actual.
+- La eliminación de cuenta exige confirmar la contraseña actual.
 
 ## Estado del proyecto
 
