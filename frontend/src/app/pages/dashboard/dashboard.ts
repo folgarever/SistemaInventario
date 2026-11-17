@@ -44,8 +44,33 @@ import { ResumenDashboard } from '../../models';
       }
 
       @if (cargando()) {
-        <div class="card">
-          <div class="table-empty"><span class="spinner"></span></div>
+        <div class="grid grid-cards mb-16" aria-hidden="true">
+          @for (tarjeta of [1, 2, 3, 4]; track tarjeta) {
+            <div class="stat-card">
+              <span class="skeleton skeleton-text" style="width: 55%"></span>
+              <div class="skeleton skeleton-value mt-8" style="width: 70%"></div>
+            </div>
+          }
+        </div>
+        <div class="card mb-16" aria-hidden="true">
+          <span class="skeleton skeleton-title" style="width: 28%"></span>
+          <div class="skeleton skeleton-line mt-16" style="width: 100%"></div>
+          <div class="skeleton skeleton-line mt-8" style="width: 85%"></div>
+          <div class="skeleton skeleton-line mt-8" style="width: 60%"></div>
+        </div>
+        <div class="table-wrapper" aria-hidden="true">
+          <table class="table">
+            <tbody>
+              @for (fila of filasSkeleton; track fila) {
+                <tr class="skeleton-row">
+                  <td><span class="skeleton skeleton-line" style="width: 80%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 55%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 70%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 50%"></span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       } @else if (resumen(); as r) {
         <div class="grid grid-cards mb-16">
@@ -156,7 +181,11 @@ import { ResumenDashboard } from '../../models';
               <h2 class="section-title">Alertas de stock</h2>
             </div>
             @if (r.alertas.total === 0) {
-              <p class="text-muted">No hay productos con stock bajo. Todo en orden.</p>
+              <div class="empty-state">
+                <span class="empty-state-icon" aria-hidden="true">✓</span>
+                <span class="empty-state-title">Todo en orden</span>
+                <span class="empty-state-text">No hay productos con stock bajo.</span>
+              </div>
             } @else {
               <div class="dashboard-metricas">
                 <div>
@@ -201,7 +230,11 @@ import { ResumenDashboard } from '../../models';
           </div>
 
           @if (r.movimientosRecientes.length === 0) {
-            <p class="text-muted">Aún no hay movimientos registrados.</p>
+            <div class="empty-state">
+              <span class="empty-state-icon" aria-hidden="true">↕</span>
+              <span class="empty-state-title">Sin movimientos</span>
+              <span class="empty-state-text">Aún no hay movimientos registrados.</span>
+            </div>
           } @else {
             <div class="table-wrapper">
               <table class="table">
@@ -259,6 +292,9 @@ export class DashboardComponent implements OnInit {
   readonly formatoCantidad = formatoCantidad;
   readonly fechaHora = fechaHora;
   readonly numero = numero;
+
+  // Filas de relleno que se muestran mientras carga el resumen.
+  readonly filasSkeleton = [1, 2, 3, 4, 5];
 
   usuario = this.auth.currentUser;
 

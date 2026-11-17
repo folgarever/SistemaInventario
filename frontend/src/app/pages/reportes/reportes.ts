@@ -116,8 +116,29 @@ type Pestana = 'ventas' | 'inventario';
       }
 
       @if (cargando()) {
-        <div class="card">
-          <div class="table-empty"><span class="spinner"></span></div>
+        <div class="grid grid-cards mb-16" aria-hidden="true">
+          @for (tarjeta of [1, 2, 3, 4, 5]; track tarjeta) {
+            <div class="stat-card">
+              <span class="skeleton skeleton-text" style="width: 55%"></span>
+              <div class="skeleton skeleton-value mt-8" style="width: 70%"></div>
+            </div>
+          }
+        </div>
+        <div class="table-wrapper" aria-hidden="true">
+          <table class="table">
+            <tbody>
+              @for (fila of filasSkeleton; track fila) {
+                <tr class="skeleton-row">
+                  <td><span class="skeleton skeleton-line" style="width: 85%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 60%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 70%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 55%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 50%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 65%"></span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       } @else if (pestana() === 'ventas') {
         @if (ventas(); as v) {
@@ -197,8 +218,14 @@ type Pestana = 'ventas' | 'inventario';
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="8" class="table-empty">
-                      No hay ventas registradas en el periodo seleccionado.
+                    <td colspan="8">
+                      <div class="empty-state">
+                        <span class="empty-state-icon" aria-hidden="true">↓</span>
+                        <span class="empty-state-title">Sin ventas en el periodo</span>
+                        <span class="empty-state-text">
+                          No hay ventas registradas en el periodo seleccionado.
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 }
@@ -276,7 +303,13 @@ type Pestana = 'ventas' | 'inventario';
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="9" class="table-empty">No hay productos que coincidan.</td>
+                    <td colspan="9">
+                      <div class="empty-state">
+                        <span class="empty-state-icon" aria-hidden="true">▤</span>
+                        <span class="empty-state-title">Sin productos</span>
+                        <span class="empty-state-text">No hay productos que coincidan con el filtro.</span>
+                      </div>
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -292,6 +325,9 @@ export class ReportesComponent implements OnInit {
 
   readonly formatoMoneda = formatoMoneda;
   readonly formatoCantidad = formatoCantidad;
+
+  // Filas de relleno que se muestran mientras carga el reporte.
+  readonly filasSkeleton = [1, 2, 3, 4, 5];
 
   pestana = signal<Pestana>('ventas');
   desde = signal(primerDiaMesInput());

@@ -93,12 +93,30 @@ import {
           </thead>
           <tbody>
             @if (cargando()) {
-              <tr>
-                <td colspan="9" class="table-empty"><span class="spinner"></span></td>
-              </tr>
+              @for (fila of filasSkeleton; track fila) {
+                <tr class="skeleton-row" aria-hidden="true">
+                  <td><span class="skeleton skeleton-line" style="width: 70%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 90%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 60%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 55%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 55%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 65%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 60%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 50%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 80%"></span></td>
+                </tr>
+              }
             } @else if (productos().length === 0) {
               <tr>
-                <td colspan="9" class="table-empty">No hay productos para mostrar.</td>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <span class="empty-state-icon" aria-hidden="true">▤</span>
+                    <span class="empty-state-title">Sin productos</span>
+                    <span class="empty-state-text">
+                      Agrega tu primer producto para empezar a controlar el inventario.
+                    </span>
+                  </div>
+                </td>
               </tr>
             } @else {
               @for (p of productos(); track p.id) {
@@ -358,6 +376,9 @@ export class ProductosComponent implements OnInit {
 
   readonly formatoMoneda = formatoMoneda;
   readonly formatoCantidad = formatoCantidad;
+
+  // Filas de relleno que se muestran mientras carga la tabla.
+  readonly filasSkeleton = [1, 2, 3, 4, 5];
 
   productos = signal<Producto[]>([]);
   categorias = signal<Categoria[]>([]);

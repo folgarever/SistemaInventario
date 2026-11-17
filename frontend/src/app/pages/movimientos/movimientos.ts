@@ -359,12 +359,27 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
           </thead>
           <tbody>
             @if (cargando()) {
-              <tr>
-                <td colspan="6" class="table-empty"><span class="spinner"></span></td>
-              </tr>
+              @for (fila of filasSkeleton; track fila) {
+                <tr class="skeleton-row" aria-hidden="true">
+                  <td><span class="skeleton skeleton-line" style="width: 80%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 55%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 75%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 45%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 45%"></span></td>
+                  <td><span class="skeleton skeleton-line" style="width: 60%"></span></td>
+                </tr>
+              }
             } @else if (movimientos().length === 0) {
               <tr>
-                <td colspan="6" class="table-empty">No hay movimientos registrados.</td>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <span class="empty-state-icon" aria-hidden="true">↕</span>
+                    <span class="empty-state-title">Sin movimientos</span>
+                    <span class="empty-state-text">
+                      Registra una compra, una venta o un ajuste para verlos aquí.
+                    </span>
+                  </div>
+                </td>
               </tr>
             } @else {
               @for (m of movimientos(); track m.id) {
@@ -450,6 +465,9 @@ export class MovimientosComponent implements OnInit {
 
   readonly formatoCantidad = formatoCantidad;
   readonly formatoMoneda = formatoMoneda;
+
+  // Filas de relleno que se muestran mientras carga el historial.
+  readonly filasSkeleton = [1, 2, 3, 4, 5];
   readonly fechaHora = fechaHora;
   readonly numero = numero;
 

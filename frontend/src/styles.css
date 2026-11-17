@@ -765,12 +765,6 @@ p {
   background-color: var(--row-hover);
 }
 
-.table-empty {
-  padding: 32px 16px;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
 /* ==========================================================================
    ETIQUETAS DE ESTADO
    ========================================================================== */
@@ -910,6 +904,87 @@ p {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   ESTADOS DE CARGA (ESQUELETOS)
+   Bloques con un brillo sutil que ocupan el lugar del contenido mientras
+   llegan los datos, para evitar saltos bruscos en la interfaz.
+   ========================================================================== */
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  min-height: 12px;
+  background-color: var(--surface-hover);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+[data-theme='dark'] .skeleton::after {
+  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+}
+
+@keyframes skeleton-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-text { height: 12px; }
+.skeleton-title { height: 18px; }
+.skeleton-value { height: 26px; }
+.skeleton-line { height: 12px; }
+
+.skeleton-row td {
+  padding: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
+/* ==========================================================================
+   ESTADO VACIO
+   Mensaje centrado para listas o tablas sin resultados.
+   ========================================================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 34px 16px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background-color: var(--surface-muted);
+  color: var(--text-soft);
+  font-size: 18px;
+}
+
+.empty-state-title {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.empty-state-text {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 /* ==========================================================================
