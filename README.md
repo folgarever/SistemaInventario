@@ -31,7 +31,7 @@ SistemaInventario/
         ├── core            # Servicios, guards, interceptores, utilidades
         ├── models          # Interfaces y modelos
         ├── services        # Clientes HTTP por módulo
-        ├── components      # Componentes reutilizables (navbar, footer)
+        ├── components      # Componentes reutilizables (navbar, footer, toast)
         └── pages           # Páginas por módulo
 ```
 
@@ -39,7 +39,7 @@ SistemaInventario/
 
 | Módulo | Descripción |
 | --- | --- |
-| Autenticación | Registro, inicio de sesión, recuperación y restablecimiento de contraseña, perfil. |
+| Autenticación | Registro, inicio de sesión, recuperación y restablecimiento de contraseña, verificación de correo, perfil y eliminación de cuenta. |
 | Categorías | Catálogo de categorías con activación/desactivación y borrado seguro. |
 | Proveedores | Catálogo de proveedores con activación/desactivación y borrado seguro. |
 | Productos | Catálogo de productos (SKU, precios, stock mínimo, unidad de medida). El stock solo cambia por movimientos. |
@@ -49,7 +49,7 @@ SistemaInventario/
 | Movimientos | Kardex de solo lectura: entradas, salidas y ajustes con existencias antes/después. |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
-| Reportes | Inventario valorizado y movimientos por rango, con exportación a CSV. |
+| Reportes | Reportes de inventario valorizado, movimientos, ventas y ganancia por rango, con exportación a PDF. |
 
 ## API REST
 
@@ -59,7 +59,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 
 | Recurso | Endpoints |
 | --- | --- |
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/logout`, `GET /api/auth/profile`, `PUT /api/auth/profile`, `PUT /api/auth/password` |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/verify-email`, `POST /api/auth/logout`, `GET /api/auth/profile`, `PUT /api/auth/profile`, `PUT /api/auth/password`, `POST /api/auth/verify-email/request`, `DELETE /api/auth/account` |
 | Categorías | `GET/POST /api/categorias`, `GET/PUT/DELETE /api/categorias/:id`, `PATCH /api/categorias/:id/estado` |
 | Proveedores | `GET/POST /api/proveedores`, `GET/PUT/DELETE /api/proveedores/:id`, `PATCH /api/proveedores/:id/estado` |
 | Productos | `GET/POST /api/productos`, `GET/PUT/DELETE /api/productos/:id`, `PATCH /api/productos/:id/estado` |
@@ -76,7 +76,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 - Node.js 20+ (probado con 24).
 - Cuenta de Supabase (base de datos remota).
 - Cuenta de Vercel (despliegue).
-- Cuenta de Resend (envío de correos de recuperación de contraseña).
+- Cuenta de Resend (envío de correos de recuperación de contraseña y verificación de correo).
 
 > No es necesario instalar MySQL ni PostgreSQL localmente: la base de datos vive en Supabase.
 
@@ -140,7 +140,10 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 - Cálculos de existencias validados en la base de datos mediante funciones
   transaccionales (RPC) con bloqueo `FOR UPDATE` (evita existencias negativas por concurrencia).
 - Los movimientos de inventario son inmutables; las correcciones se registran como ajustes.
+  (El borrado de una cuenta es la única excepción y ocurre dentro de una función de base de datos.)
 - Idempotencia en entradas, salidas y ajustes mediante `client_request_id`.
+- Verificación de correo mediante enlaces con token de un solo uso (se guarda solo su hash).
+  La eliminación de cuenta exige confirmar la contraseña actual.
 
 ## Estado del proyecto
 

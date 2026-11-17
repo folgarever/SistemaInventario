@@ -14,12 +14,13 @@ import {
 } from '../types/auth';
 import { sanitizeFilterValue } from '../utils/sanitize';
 import { AppError } from '../middlewares/errorHandler';
-import { enviarCorreoRestablecimiento } from './emailService';
+import { enviarCorreoRestablecimiento, enviarCorreoVerificacion } from './emailService';
 
 const MAX_NOMBRE = 100;
 const MAX_APELLIDO = 100;
 const MIN_PASSWORD = 8;
 const RESET_TOKEN_MINUTOS = 60;
+const VERIF_TOKEN_HORAS = 24;
 
 function createAuthError(message: string, statusCode: number = 400): AppError {
   const err = new Error(message) as AppError;
@@ -135,7 +136,7 @@ export class AuthService {
         password_hash,
         activo: true,
       })
-      .select('id, nombres, apellidos, email, username, activo, created_at')
+      .select('id, nombres, apellidos, email, username, activo, email_verificado, email_verificado_en, created_at')
       .single();
 
     if (errorInsert || !nuevoUsuario) {
@@ -152,6 +153,8 @@ export class AuthService {
       email: nuevoUsuario.email,
       username: nuevoUsuario.username,
       activo: nuevoUsuario.activo,
+      email_verificado: nuevoUsuario.email_verificado ?? false,
+      email_verificado_en: nuevoUsuario.email_verificado_en ?? null,
       created_at: nuevoUsuario.created_at,
     };
 
@@ -207,6 +210,8 @@ export class AuthService {
       email: usuario.email,
       username: usuario.username,
       activo: usuario.activo,
+      email_verificado: usuario.email_verificado ?? false,
+      email_verificado_en: usuario.email_verificado_en ?? null,
       created_at: usuario.created_at,
     };
 
@@ -224,7 +229,7 @@ export class AuthService {
   static async obtenerPerfil(userId: string): Promise<UsuarioPublico> {
     const { data: usuario, error } = await supabase
       .from('usuarios')
-      .select('id, nombres, apellidos, email, username, activo, created_at')
+      .select('id, nombres, apellidos, email, username, activo, email_verificado, email_verificado_en, created_at')
       .eq('id', userId)
       .single();
 
@@ -254,7 +259,7 @@ export class AuthService {
       .from('usuarios')
       .update({ nombres, apellidos, updated_at: new Date().toISOString() })
       .eq('id', userId)
-      .select('id, nombres, apellidos, email, username, activo, created_at')
+      .select('id, nombres, apellidos, email, username, activo, email_verificado, email_verificado_en, created_at')
       .single();
 
     if (error || !usuario) {
@@ -400,5 +405,131 @@ export class AuthService {
       .from('password_reset_tokens')
       .update({ usado: true })
       .eq('id', registro.id);
+  }
+
+  // Genera y envía un enlace para verificar el correo del usuario.
+  // Devuelve si el correo pudo enviarse y si la cuenta ya estaba verificada.
+  static async solicitarVerificacionEmail(
+    userId: string
+  ): Promise<{ enviado: boolean; yaVerificado: boolean }> {
+    const { data: usuario, error } = await supabase
+      .from('usuarios')
+      .select('id, nombres, email, activo, email_verificado')
+      .eq('id', userId)
+      .single();
+
+    if (error || !usuario) {
+      throw createAuthError('Usuario no encontrado', 404);
+    }
+
+    if (usuario.email_verificado) {
+      return { enviado: false, yaVerificado: true };
+    }
+
+    // Invalida tokens anteriores y crea uno nuevo.
+    await supabase
+      .from('email_verification_tokens')
+      .update({ usado: true })
+      .eq('user_id', usuario.id)
+      .eq('usado', false);
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const token_hash = hashToken(token);
+    const expira_at = new Date(Date.now() + VERIF_TOKEN_HORAS * 60 * 60 * 1000).toISOString();
+
+    const { error: errorInsert } = await supabase.from('email_verification_tokens').insert({
+      user_id: usuario.id,
+      token_hash,
+      expira_at,
+      usado: false,
+    });
+
+    if (errorInsert) {
+      throw createAuthError('Error al generar el enlace de verificación', 500);
+    }
+
+    const enlace = `${env.FRONTEND_URL}/verificar-email?token=${token}`;
+    const enviado = await enviarCorreoVerificacion(usuario.email, usuario.nombres, enlace);
+
+    return { enviado, yaVerificado: false };
+  }
+
+  // Confirma el correo a partir del token enviado por email.
+  static async verificarEmail(token: string): Promise<void> {
+    const valorToken = token?.trim();
+
+    if (!valorToken) {
+      throw createAuthError('El enlace de verificación no es válido');
+    }
+
+    const token_hash = hashToken(valorToken);
+
+    const { data: registro, error } = await supabase
+      .from('email_verification_tokens')
+      .select('id, user_id, expira_at, usado')
+      .eq('token_hash', token_hash)
+      .eq('usado', false)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      throw createAuthError('Error al validar el enlace', 500);
+    }
+
+    if (!registro) {
+      throw createAuthError('El enlace de verificación es inválido o ya fue utilizado');
+    }
+
+    if (new Date(registro.expira_at).getTime() < Date.now()) {
+      throw createAuthError('El enlace de verificación ha expirado');
+    }
+
+    const { error: errorUpdate } = await supabase
+      .from('usuarios')
+      .update({
+        email_verificado: true,
+        email_verificado_en: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', registro.user_id);
+
+    if (errorUpdate) {
+      throw createAuthError('Error al verificar el correo: ' + errorUpdate.message, 500);
+    }
+
+    await supabase
+      .from('email_verification_tokens')
+      .update({ usado: true })
+      .eq('id', registro.id);
+  }
+
+  // Elimina la cuenta del usuario y todos sus datos asociados.
+  // Exige la contraseña actual como confirmación de identidad.
+  static async eliminarCuenta(userId: string, password: string): Promise<void> {
+    if (!password) {
+      throw createAuthError('Debe confirmar su contraseña para eliminar la cuenta');
+    }
+
+    const { data: usuario, error } = await supabase
+      .from('usuarios')
+      .select('id, password_hash')
+      .eq('id', userId)
+      .single();
+
+    if (error || !usuario) {
+      throw createAuthError('Usuario no encontrado', 404);
+    }
+
+    const passwordValida = await bcrypt.compare(password, usuario.password_hash);
+    if (!passwordValida) {
+      throw createAuthError('La contraseña es incorrecta', 401);
+    }
+
+    // El borrado se hace en una función de base de datos para respetar el
+    // orden de las claves foráneas y poder eliminar el historial inmutable.
+    const { error: errorDelete } = await supabase.rpc('eliminar_cuenta', { p_user_id: userId });
+
+    if (errorDelete) {
+      throw createAuthError('Error al eliminar la cuenta: ' + errorDelete.message, 500);
+    }
   }
 }

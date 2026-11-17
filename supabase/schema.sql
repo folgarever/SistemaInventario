@@ -25,9 +25,17 @@ CREATE TABLE IF NOT EXISTS usuarios (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Verificación del correo. Es informativa: no bloquea el acceso, solo
+    -- indica en el perfil si el correo fue confirmado por su dueño.
+    email_verificado BOOLEAN NOT NULL DEFAULT FALSE,
+    email_verificado_en TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Añade las columnas de verificación si la tabla ya existía sin ellas.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado_en TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_usuarios_username ON usuarios(LOWER(username));
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(LOWER(email));
@@ -47,6 +55,23 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_reset_user ON password_reset_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_reset_hash ON password_reset_tokens(token_hash);
+
+-- =============================================================================
+-- 1c. TOKENS DE VERIFICACIÓN DE CORREO
+-- Igual que los tokens de restablecimiento: se guarda el hash SHA-256, nunca
+-- el token en claro. Un token solo puede usarse una vez y tiene caducidad.
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) NOT NULL,
+    expira_at TIMESTAMPTZ NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verif_user ON email_verification_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_verif_hash ON email_verification_tokens(token_hash);
 
 -- =============================================================================
 -- 2. CATEGORIAS
@@ -269,11 +294,16 @@ CREATE TRIGGER trg_productos_updated BEFORE UPDATE ON productos
 
 -- Los movimientos históricos no deben modificarse ni eliminarse.
 -- Si hay que corregir existencias, se registra un AJUSTE (nueva fila).
+-- Excepción: durante el borrado de una cuenta se activa una bandera de
+-- transacción que autoriza eliminar su historial.
 CREATE OR REPLACE FUNCTION bloquear_modificacion_movimientos()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    IF TG_OP = 'DELETE' AND current_setting('app.eliminando_cuenta', true) = 'on' THEN
+        RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'Los movimientos de inventario son inmutables: registre un ajuste en lugar de modificarlos';
 END;
 $$;
@@ -281,6 +311,34 @@ $$;
 DROP TRIGGER IF EXISTS trg_movimientos_inmutables ON movimientos_inventario;
 CREATE TRIGGER trg_movimientos_inmutables BEFORE UPDATE OR DELETE ON movimientos_inventario
     FOR EACH ROW EXECUTE FUNCTION bloquear_modificacion_movimientos();
+
+-- =============================================================================
+-- FUNCION: ELIMINAR CUENTA
+-- Borra la cuenta y todos sus datos en el orden que exigen las claves foráneas.
+-- Los movimientos son inmutables, por lo que se activa la bandera de transacción
+-- app.eliminando_cuenta para autorizar su borrado solo dentro de este proceso.
+-- =============================================================================
+CREATE OR REPLACE FUNCTION eliminar_cuenta(p_user_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    PERFORM set_config('app.eliminando_cuenta', 'on', true);
+
+    DELETE FROM movimientos_inventario WHERE user_id = p_user_id;
+    DELETE FROM ajustes_inventario WHERE user_id = p_user_id;
+    DELETE FROM salidas_inventario WHERE user_id = p_user_id;
+    -- Eliminar las entradas borra en cascada sus detalles.
+    DELETE FROM entradas_inventario WHERE user_id = p_user_id;
+    DELETE FROM productos WHERE user_id = p_user_id;
+    DELETE FROM proveedores WHERE user_id = p_user_id;
+    DELETE FROM categorias WHERE user_id = p_user_id;
+    -- Los tokens de restablecimiento y de verificación caen en cascada.
+    DELETE FROM usuarios WHERE id = p_user_id;
+END;
+$$;
 
 -- =============================================================================
 -- POLITICAS DE SEGURIDAD (RLS)
@@ -291,6 +349,7 @@ CREATE TRIGGER trg_movimientos_inmutables BEFORE UPDATE OR DELETE ON movimientos
 -- =============================================================================
 ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
 ALTER TABLE password_reset_tokens DISABLE ROW LEVEL SECURITY;
+ALTER TABLE email_verification_tokens DISABLE ROW LEVEL SECURITY;
 ALTER TABLE categorias DISABLE ROW LEVEL SECURITY;
 ALTER TABLE proveedores DISABLE ROW LEVEL SECURITY;
 ALTER TABLE productos DISABLE ROW LEVEL SECURITY;
