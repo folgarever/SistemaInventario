@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { mensajeError } from '../../core/api-error.utils';
@@ -62,6 +62,28 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
             <div class="form-group">
               <label class="form-label" for="username">Nombre de usuario</label>
               <input id="username" type="text" class="form-control" [value]="usuario()?.username ?? ''" disabled />
+            </div>
+
+            <div class="form-group">
+              <span class="form-label">Estado del correo</span>
+              @if (usuario()?.email_verificado) {
+                <div>
+                  <span class="badge badge-disponible"><span class="badge-dot"></span>Correo verificado</span>
+                </div>
+              } @else {
+                <div class="perfil-verif">
+                  <span class="badge badge-bajo"><span class="badge-dot"></span>Correo sin verificar</span>
+                  <button
+                    type="button"
+                    class="btn-uber btn-uber-outline btn-sm"
+                    [disabled]="enviandoVerificacion()"
+                    (click)="enviarVerificacion()"
+                  >
+                    {{ enviandoVerificacion() ? 'Enviando…' : 'Reenviar enlace' }}
+                  </button>
+                </div>
+                <span class="form-hint">Te enviaremos un enlace a tu correo para confirmarlo.</span>
+              }
             </div>
 
             <button type="submit" class="btn-uber" [disabled]="guardandoPerfil()">
@@ -140,10 +162,63 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
           </form>
         </div>
       </div>
+
+      <div class="card card-danger mt-16">
+        <div class="card-header">
+          <h2 class="section-title text-danger">Eliminar cuenta</h2>
+        </div>
+        <p class="text-muted mb-16">
+          Esta acción es permanente: se eliminarán tu cuenta y todos tus datos (productos,
+          movimientos, proveedores y reportes). No se puede deshacer.
+        </p>
+
+        @if (mensajeEliminar()) {
+          <div class="alert alert-danger mb-16">{{ mensajeEliminar() }}</div>
+        }
+
+        @if (!confirmarEliminar()) {
+          <button type="button" class="btn-uber btn-uber-danger" (click)="confirmarEliminar.set(true)">
+            Eliminar mi cuenta
+          </button>
+        } @else {
+          <form [formGroup]="formEliminar" (ngSubmit)="eliminarCuenta()">
+            <div class="form-group">
+              <label class="form-label" for="passwordEliminar">Confirma tu contraseña</label>
+              <input
+                id="passwordEliminar"
+                type="password"
+                class="form-control"
+                formControlName="password"
+                autocomplete="current-password"
+              />
+              @if (invalido(formEliminar, 'password')) {
+                <span class="form-error">Ingresa tu contraseña.</span>
+              }
+            </div>
+
+            <div class="btn-row">
+              <button type="submit" class="btn-uber btn-uber-danger" [disabled]="eliminando()">
+                @if (eliminando()) {
+                  <span class="spinner"></span>
+                }
+                {{ eliminando() ? 'Eliminando…' : 'Eliminar definitivamente' }}
+              </button>
+              <button
+                type="button"
+                class="btn-uber btn-uber-outline"
+                [disabled]="eliminando()"
+                (click)="cancelarEliminar()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        }
+      </div>
     </div>
   `,
 })
-export class PerfilComponent {
+export class PerfilComponent implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
@@ -155,6 +230,12 @@ export class PerfilComponent {
 
   guardandoPassword = signal(false);
   mensajePassword = signal<string | null>(null);
+
+  enviandoVerificacion = signal(false);
+
+  confirmarEliminar = signal(false);
+  eliminando = signal(false);
+  mensajeEliminar = signal<string | null>(null);
 
   formPerfil = this.fb.nonNullable.group({
     nombres: [this.auth.currentUser()?.nombres ?? '', [Validators.required, Validators.maxLength(100)]],
@@ -172,6 +253,15 @@ export class PerfilComponent {
     },
     { validators: passwordsIguales },
   );
+
+  formEliminar = this.fb.nonNullable.group({
+    password: ['', [Validators.required]],
+  });
+
+  ngOnInit(): void {
+    // Refresca los datos (por ejemplo, el estado de verificación del correo).
+    this.auth.refrescarPerfil().subscribe({ error: () => {} });
+  }
 
   invalido(form: AbstractControl, campo: string): boolean {
     const control = form.get(campo);
@@ -221,6 +311,56 @@ export class PerfilComponent {
       error: (e) => {
         this.mensajePassword.set(mensajeError(e, 'No se pudo actualizar la contraseña.'));
         this.guardandoPassword.set(false);
+      },
+    });
+  }
+
+  enviarVerificacion(): void {
+    this.enviandoVerificacion.set(true);
+
+    this.auth.solicitarVerificacionEmail().subscribe({
+      next: (res) => {
+        this.enviandoVerificacion.set(false);
+        if (res.data?.enviado) {
+          this.toast.exito('Te enviamos un enlace de verificación a tu correo.');
+        } else {
+          this.toast.error(
+            'No se pudo enviar el correo. Verifica que el envío de correos esté configurado.',
+          );
+        }
+      },
+      error: (e) => {
+        this.enviandoVerificacion.set(false);
+        this.toast.error(mensajeError(e, 'No se pudo enviar el enlace de verificación.'));
+      },
+    });
+  }
+
+  cancelarEliminar(): void {
+    this.confirmarEliminar.set(false);
+    this.mensajeEliminar.set(null);
+    this.formEliminar.reset();
+  }
+
+  eliminarCuenta(): void {
+    if (this.formEliminar.invalid) {
+      this.formEliminar.markAllAsTouched();
+      return;
+    }
+
+    this.eliminando.set(true);
+    this.mensajeEliminar.set(null);
+
+    this.auth.eliminarCuenta(this.formEliminar.getRawValue().password).subscribe({
+      next: () => {
+        this.eliminando.set(false);
+        this.toast.exito('Tu cuenta fue eliminada. Hasta pronto.');
+        // Cierra la sesión y redirige al inicio de sesión.
+        this.auth.logout();
+      },
+      error: (e) => {
+        this.eliminando.set(false);
+        this.mensajeEliminar.set(mensajeError(e, 'No se pudo eliminar la cuenta.'));
       },
     });
   }

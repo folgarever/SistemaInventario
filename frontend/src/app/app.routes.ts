@@ -27,6 +27,11 @@ export const routes: Routes = [
       import('./pages/restablecer/restablecer').then((m) => m.RestablecerComponent),
   },
   {
+    path: 'verificar-email',
+    loadComponent: () =>
+      import('./pages/verificar-email/verificar-email').then((m) => m.VerificarEmailComponent),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardComponent),

@@ -1109,6 +1109,26 @@ p {
   align-items: start;
 }
 
+/* Fila con el distintivo de verificación y el botón de reenvío. */
+.perfil-verif {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Tarjeta de zona peligrosa (eliminar cuenta). */
+.card-danger {
+  border-color: var(--color-danger-border);
+}
+
+/* Fila de botones alineada a la izquierda. */
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ==========================================================================
    REPORTES
    Filtros de periodo y contenido del reporte.
