@@ -1030,6 +1030,20 @@ p {
   max-width: 560px;
 }
 
+/* Logotipo de la marca (zorro). Cambia de version segun el tema activo:
+   la clara (zorro oscuro sobre fondo blanco) en tema claro y la oscura
+   (zorro claro sobre fondo negro) en tema oscuro. */
+.brand-logo {
+  background-image: url('/brand/zorro-claro.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+[data-theme='dark'] .brand-logo {
+  background-image: url('/brand/zorro-oscuro.png');
+}
+
 .auth-brand {
   display: inline-flex;
   align-items: center;

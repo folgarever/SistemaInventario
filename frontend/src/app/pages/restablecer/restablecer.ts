@@ -17,7 +17,7 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
   template: `
     <div class="auth-shell">
       <div class="auth-card">
-        <div class="auth-brand">SI</div>
+        <div class="auth-brand brand-logo" aria-hidden="true"></div>
         <h1 class="auth-title">Restablecer contraseña</h1>
         <p class="auth-subtitle">Define una nueva contraseña para tu cuenta.</p>
 

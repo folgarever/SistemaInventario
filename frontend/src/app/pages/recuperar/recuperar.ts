@@ -11,7 +11,7 @@ import { mensajeError } from '../../core/api-error.utils';
   template: `
     <div class="auth-shell">
       <div class="auth-card">
-        <div class="auth-brand">SI</div>
+        <div class="auth-brand brand-logo" aria-hidden="true"></div>
         <h1 class="auth-title">Recuperar contraseña</h1>
         <p class="auth-subtitle">
           Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.

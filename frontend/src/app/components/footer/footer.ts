@@ -10,7 +10,7 @@ import { RouterLink } from '@angular/router';
     <footer class="app-footer">
       <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-mark" aria-hidden="true">SI</span>
+          <span class="footer-mark brand-logo" aria-hidden="true"></span>
           <div>
             <span class="footer-name">Sistema de Inventario</span>
             <span class="footer-tag">Control de productos, existencias y movimientos</span>

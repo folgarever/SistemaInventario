@@ -17,7 +17,7 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
   template: `
     <div class="auth-shell">
       <div class="auth-card auth-card-wide">
-        <div class="auth-brand">SI</div>
+        <div class="auth-brand brand-logo" aria-hidden="true"></div>
         <h1 class="auth-title">Crear una cuenta</h1>
         <p class="auth-subtitle">Registra tus datos para comenzar a controlar tu inventario.</p>
 
