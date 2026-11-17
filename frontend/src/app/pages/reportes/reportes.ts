@@ -9,7 +9,7 @@ import {
   primerDiaMesInput,
   ultimoDiaMesAnteriorInput,
 } from '../../core/fecha.utils';
-import { formatoCantidad, formatoMoneda } from '../../core/formato.utils';
+import { formatoCantidad, formatoMoneda, numero } from '../../core/formato.utils';
 import { DocumentoPdf, fechaArchivo, fechaHoraArchivo, generarPdf } from '../../core/pdf.utils';
 import {
   agruparPorProveedor,
@@ -583,6 +583,16 @@ export class ReportesComponent implements OnInit {
         { etiqueta: 'Ganancia estimada', valor: formatoMoneda(v.totales.ganancia) },
         { etiqueta: 'Margen', valor: `${formatoCantidad(v.totales.margen)} %` },
       ],
+      graficos: [
+        {
+          titulo: 'Top productos por ingreso',
+          datos: [...v.items]
+            .sort((a, b) => numero(b.ingreso) - numero(a.ingreso))
+            .slice(0, 8)
+            .map((item) => ({ etiqueta: item.nombre, valor: numero(item.ingreso) })),
+          formatoValor: formatoMoneda,
+        },
+      ],
       secciones: [
         {
           titulo: 'Detalle por producto',
@@ -619,6 +629,16 @@ export class ReportesComponent implements OnInit {
     const r = this.inventario();
     if (!r) return;
 
+    const porCategoria = new Map<string, number>();
+    for (const item of r.items) {
+      const categoria = item.categoria ?? 'Sin categoría';
+      porCategoria.set(categoria, (porCategoria.get(categoria) ?? 0) + numero(item.valor_venta));
+    }
+    const datosCategoria = [...porCategoria.entries()]
+      .map(([etiqueta, valor]) => ({ etiqueta, valor }))
+      .sort((a, b) => b.valor - a.valor)
+      .slice(0, 8);
+
     const documento: DocumentoPdf = {
       titulo: 'Reporte de inventario',
       meta: [
@@ -631,6 +651,13 @@ export class ReportesComponent implements OnInit {
         { etiqueta: 'Valor a venta', valor: formatoMoneda(r.totales.valorVenta) },
         { etiqueta: 'Agotados', valor: String(r.totales.agotados) },
         { etiqueta: 'Bajo stock', valor: String(r.totales.bajoStock) },
+      ],
+      graficos: [
+        {
+          titulo: 'Valor a precio de venta por categoría',
+          datos: datosCategoria,
+          formatoValor: formatoMoneda,
+        },
       ],
       secciones: [
         {
@@ -693,6 +720,16 @@ export class ReportesComponent implements OnInit {
         { etiqueta: 'Agotados', valor: String(lista.totales.agotados) },
         { etiqueta: 'Bajo stock', valor: String(lista.totales.bajoStock) },
         { etiqueta: 'Costo estimado', valor: formatoMoneda(lista.totales.costoEstimado) },
+      ],
+      graficos: [
+        {
+          titulo: 'Costo estimado por proveedor',
+          datos: grupos.map((grupo) => ({
+            etiqueta: grupo.proveedor,
+            valor: grupo.items.reduce((total, item) => total + item.costo_estimado, 0),
+          })),
+          formatoValor: formatoMoneda,
+        },
       ],
       secciones: grupos.map((grupo) => ({
         titulo: grupo.proveedor,

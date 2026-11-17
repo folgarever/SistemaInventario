@@ -349,6 +349,11 @@ export class DashboardComponent implements OnInit {
           0,
         );
 
+        const topValor = [...productos]
+          .map((p) => ({ etiqueta: p.nombre, valor: numero(p.stock) * numero(p.precio_venta) }))
+          .sort((a, b) => b.valor - a.valor)
+          .slice(0, 8);
+
         try {
           await generarPdf({
             titulo: 'Inventario de productos',
@@ -356,6 +361,13 @@ export class DashboardComponent implements OnInit {
             resumen: [
               { etiqueta: 'Productos', valor: String(productos.length) },
               { etiqueta: 'Valor a precio de venta', valor: formatoMoneda(valorTotal) },
+            ],
+            graficos: [
+              {
+                titulo: 'Productos con mayor valor en inventario',
+                datos: topValor,
+                formatoValor: formatoMoneda,
+              },
             ],
             secciones: [
               {

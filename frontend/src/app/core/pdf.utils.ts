@@ -6,6 +6,8 @@
 // El estilo sigue la identidad visual del sistema: monocromatico (negro, blanco
 // y grises), encabezado negro y tablas con cabecera negra.
 
+import type { jsPDF } from 'jspdf';
+
 export interface ColumnaPdf {
   encabezado: string;
   clave: string;
@@ -25,6 +27,20 @@ export interface ResumenPdf {
   valor: string;
 }
 
+export interface DatoGraficoPdf {
+  etiqueta: string;
+  valor: number;
+}
+
+// Grafico de barras horizontales dibujado con primitivas de jsPDF (sin SVG ni
+// imagenes). Se usa para acompanar los reportes con una lectura visual rapida.
+export interface GraficoBarrasPdf {
+  titulo?: string;
+  datos: DatoGraficoPdf[];
+  // Texto con el que se muestra el valor de cada barra (por defecto, el numero).
+  formatoValor?: (valor: number) => string;
+}
+
 export interface DocumentoPdf {
   titulo: string;
   subtitulo?: string;
@@ -32,6 +48,8 @@ export interface DocumentoPdf {
   meta?: string[];
   // Tarjetas de totales mostradas antes de las tablas.
   resumen?: ResumenPdf[];
+  // Graficos mostrados despues del resumen y antes de las tablas.
+  graficos?: GraficoBarrasPdf[];
   secciones: SeccionPdf[];
   nombreArchivo: string;
   horizontal?: boolean;
@@ -56,6 +74,87 @@ export function fechaHoraArchivo(): string {
   return `${p(ahora.getDate())}/${p(ahora.getMonth() + 1)}/${ahora.getFullYear()} ${p(
     ahora.getHours(),
   )}:${p(ahora.getMinutes())}`;
+}
+
+// Recorta un texto con puntos suspensivos si supera el ancho disponible.
+function recortarTexto(pdf: jsPDF, texto: string, anchoMax: number): string {
+  if (pdf.getTextWidth(texto) <= anchoMax) return texto;
+  let recortado = texto;
+  while (recortado.length > 1 && pdf.getTextWidth(recortado + '...') > anchoMax) {
+    recortado = recortado.slice(0, -1);
+  }
+  return recortado + '...';
+}
+
+// Dibuja un grafico de barras horizontales y devuelve la coordenada vertical
+// donde continuar el documento. Respeta el limite inferior de la pagina.
+function dibujarGraficoBarras(
+  pdf: jsPDF,
+  grafico: GraficoBarrasPdf,
+  x: number,
+  ancho: number,
+  yInicial: number,
+  limiteInferior: number,
+): number {
+  let y = yInicial;
+  const fuente = 'helvetica';
+
+  if (grafico.titulo) {
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(11);
+    pdf.text(grafico.titulo, x, y);
+    y += 18;
+  }
+
+  const datos = grafico.datos.filter((d) => Number.isFinite(d.valor));
+  if (datos.length === 0) {
+    return y;
+  }
+
+  const maximo = Math.max(...datos.map((d) => Math.abs(d.valor)), 0);
+  const anchoEtiqueta = Math.min(ancho * 0.42, 200);
+  const anchoValor = 80;
+  const separacion = 8;
+  const barX = x + anchoEtiqueta + separacion;
+  const anchoBarra = Math.max(ancho - anchoEtiqueta - separacion - anchoValor, 40);
+  const altoFila = 18;
+  const altoBarra = 9;
+  const formato = grafico.formatoValor ?? ((v: number) => String(v));
+
+  for (const dato of datos) {
+    if (y + altoFila > limiteInferior) {
+      pdf.addPage();
+      y = 56;
+    }
+
+    // Etiqueta de la barra.
+    pdf.setTextColor(51, 51, 51);
+    pdf.setFont(fuente, 'normal');
+    pdf.setFontSize(8);
+    pdf.text(recortarTexto(pdf, dato.etiqueta, anchoEtiqueta), x, y + altoBarra - 1.5);
+
+    // Pista de fondo de la barra.
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(barX, y, anchoBarra, altoBarra, 'F');
+
+    // Relleno proporcional al valor.
+    const fraccion = maximo > 0 ? Math.abs(dato.valor) / maximo : 0;
+    if (fraccion > 0) {
+      pdf.setFillColor(0, 0, 0);
+      pdf.rect(barX, y, Math.max(anchoBarra * fraccion, 2), altoBarra, 'F');
+    }
+
+    // Valor a la derecha de la barra.
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(fuente, 'bold');
+    pdf.setFontSize(8);
+    pdf.text(formato(dato.valor), barX + anchoBarra + 6, y + altoBarra - 1.5);
+
+    y += altoFila;
+  }
+
+  return y + 8;
 }
 
 // Genera y descarga un PDF con encabezado, metadatos, tarjetas de totales y una
@@ -128,6 +227,11 @@ export async function generarPdf(documento: DocumentoPdf): Promise<void> {
       pdf.text(r.valor, x + 10, y + 37);
     });
     y += altoCaja + 20;
+  }
+
+  for (const grafico of documento.graficos ?? []) {
+    y = dibujarGraficoBarras(pdf, grafico, margen, anchoUtil, y, altoPagina - margen - 20);
+    y += 10;
   }
 
   for (const seccion of documento.secciones) {
