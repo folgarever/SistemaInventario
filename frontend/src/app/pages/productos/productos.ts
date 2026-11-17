@@ -9,6 +9,7 @@ import { CategoriaService } from '../../services/categoria.service';
 import { ProveedorService } from '../../services/proveedor.service';
 import { ModalComponent } from '../../components/modal/modal';
 import { mensajeError } from '../../core/api-error.utils';
+import { ToastService } from '../../core/toast.service';
 import { fechaArchivo, generarPdf } from '../../core/pdf.utils';
 import {
   estadoStock,
@@ -340,6 +341,7 @@ export class ProductosComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
 
   readonly unidades = [
     'unidad',
@@ -554,6 +556,7 @@ export class ProductosComponent implements OnInit {
         this.nuevaCategoria.setValue('');
         this.form.get('categoria_id')!.setValue(res.data.id);
         this.cargarCombos();
+        this.toast.exito('Categoría creada.');
       },
       error: (e) => {
         this.errorCombo.set(mensajeError(e, 'No se pudo crear la categoría.'));
@@ -579,6 +582,7 @@ export class ProductosComponent implements OnInit {
         this.nuevoProveedor.setValue('');
         this.form.get('proveedor_id')!.setValue(res.data.id);
         this.cargarCombos();
+        this.toast.exito('Proveedor creado.');
       },
       error: (e) => {
         this.errorCombo.set(mensajeError(e, 'No se pudo crear el proveedor.'));
@@ -624,6 +628,7 @@ export class ProductosComponent implements OnInit {
         this.guardando.set(false);
         this.cerrarForm();
         this.cargar();
+        this.toast.exito(actual ? 'Producto actualizado.' : 'Producto creado.');
       },
       error: (e) => {
         this.errorForm.set(mensajeError(e, 'No se pudo guardar el producto.'));
@@ -634,7 +639,10 @@ export class ProductosComponent implements OnInit {
 
   alternarEstado(producto: Producto): void {
     this.productoService.cambiarEstado(producto.id, !producto.activo).subscribe({
-      next: () => this.cargar(),
+      next: () => {
+        this.cargar();
+        this.toast.exito(producto.activo ? 'Producto desactivado.' : 'Producto activado.');
+      },
       error: (e) => this.error.set(mensajeError(e, 'No se pudo cambiar el estado.')),
     });
   }
@@ -645,7 +653,10 @@ export class ProductosComponent implements OnInit {
     }
 
     this.productoService.eliminar(producto.id).subscribe({
-      next: () => this.cargar(),
+      next: () => {
+        this.cargar();
+        this.toast.exito('Producto eliminado.');
+      },
       error: (e) => this.error.set(mensajeError(e, 'No se pudo eliminar el producto.')),
     });
   }

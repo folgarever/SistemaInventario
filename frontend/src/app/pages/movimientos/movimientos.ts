@@ -8,6 +8,7 @@ import { EntradaService } from '../../services/entrada.service';
 import { SalidaService } from '../../services/salida.service';
 import { AjusteService } from '../../services/ajuste.service';
 import { AlertaService } from '../../services/alerta.service';
+import { ToastService } from '../../core/toast.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { ahoraLocalInput, aISO, fechaHora } from '../../core/fecha.utils';
 import { formatoCantidad, formatoMoneda, numero } from '../../core/formato.utils';
@@ -69,9 +70,6 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
 
       @if (errorForm()) {
         <div class="alert alert-danger mb-16">{{ errorForm() }}</div>
-      }
-      @if (exito()) {
-        <div class="alert alert-success mb-16">{{ exito() }}</div>
       }
 
       <!-- COMPRA -->
@@ -448,6 +446,7 @@ export class MovimientosComponent implements OnInit {
   private salidaService = inject(SalidaService);
   private ajusteService = inject(AjusteService);
   private alertas = inject(AlertaService);
+  private toast = inject(ToastService);
 
   readonly formatoCantidad = formatoCantidad;
   readonly formatoMoneda = formatoMoneda;
@@ -490,7 +489,6 @@ export class MovimientosComponent implements OnInit {
   modoForm = signal<ModoForm | null>(null);
   guardando = signal(false);
   errorForm = signal<string | null>(null);
-  exito = signal<string | null>(null);
 
   filtroProducto = this.fb.nonNullable.control('');
   filtroTipo = this.fb.nonNullable.control('');
@@ -593,14 +591,12 @@ export class MovimientosComponent implements OnInit {
 
   abrirForm(modo: ModoForm): void {
     this.errorForm.set(null);
-    this.exito.set(null);
     this.modoForm.update((actual) => (actual === modo ? null : modo));
   }
 
   cerrarForm(): void {
     this.modoForm.set(null);
     this.errorForm.set(null);
-    this.exito.set(null);
   }
 
   // --- Compra ---
@@ -643,7 +639,6 @@ export class MovimientosComponent implements OnInit {
 
     this.guardando.set(true);
     this.errorForm.set(null);
-    this.exito.set(null);
 
     this.entradaService
       .registrar({
@@ -656,7 +651,7 @@ export class MovimientosComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.guardando.set(false);
-          this.exito.set(res.data.idempotente ? 'La compra ya había sido registrada.' : 'Compra registrada.');
+          this.toast.exito(res.data.idempotente ? 'La compra ya había sido registrada.' : 'Compra registrada.');
           this.formCompra.reset({ proveedor_id: '', fecha: ahoraLocalInput(), observaciones: '' });
           this.itemsCompra.clear();
           this.itemsCompra.push(this.crearLineaCompra());
@@ -682,7 +677,6 @@ export class MovimientosComponent implements OnInit {
     const valores = this.formVenta.getRawValue();
     this.guardando.set(true);
     this.errorForm.set(null);
-    this.exito.set(null);
 
     this.salidaService
       .registrar({
@@ -696,7 +690,7 @@ export class MovimientosComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.guardando.set(false);
-          this.exito.set(res.data.idempotente ? 'La venta ya había sido registrada.' : 'Venta registrada.');
+          this.toast.exito(res.data.idempotente ? 'La venta ya había sido registrada.' : 'Venta registrada.');
           this.formVenta.reset({
             producto_id: '',
             cantidad: '1',
@@ -732,7 +726,6 @@ export class MovimientosComponent implements OnInit {
 
     this.guardando.set(true);
     this.errorForm.set(null);
-    this.exito.set(null);
 
     this.ajusteService
       .registrar({
@@ -746,7 +739,7 @@ export class MovimientosComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.guardando.set(false);
-          this.exito.set(res.data.idempotente ? 'El ajuste ya había sido registrado.' : 'Ajuste registrado.');
+          this.toast.exito(res.data.idempotente ? 'El ajuste ya había sido registrado.' : 'Ajuste registrado.');
           this.formAjuste.reset({
             producto_id: '',
             existencias_fisicas: '0',

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { mensajeError } from '../../core/api-error.utils';
+import { ToastService } from '../../core/toast.service';
 
 function passwordsIguales(control: AbstractControl): { [key: string]: boolean } | null {
   const nueva = control.get('passwordNueva')?.value;
@@ -30,11 +31,7 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
           </div>
 
           @if (mensajePerfil()) {
-            <div
-              class="alert mb-16"
-              [class.alert-success]="perfilOk()"
-              [class.alert-danger]="!perfilOk()"
-            >
+            <div class="alert alert-danger mb-16">
               {{ mensajePerfil() }}
             </div>
           }
@@ -82,11 +79,7 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
           </div>
 
           @if (mensajePassword()) {
-            <div
-              class="alert mb-16"
-              [class.alert-success]="passwordOk()"
-              [class.alert-danger]="!passwordOk()"
-            >
+            <div class="alert alert-danger mb-16">
               {{ mensajePassword() }}
             </div>
           }
@@ -153,16 +146,15 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
 export class PerfilComponent {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
 
   usuario = this.auth.currentUser;
 
   guardandoPerfil = signal(false);
   mensajePerfil = signal<string | null>(null);
-  perfilOk = signal(false);
 
   guardandoPassword = signal(false);
   mensajePassword = signal<string | null>(null);
-  passwordOk = signal(false);
 
   formPerfil = this.fb.nonNullable.group({
     nombres: [this.auth.currentUser()?.nombres ?? '', [Validators.required, Validators.maxLength(100)]],
@@ -197,12 +189,11 @@ export class PerfilComponent {
 
     this.auth.actualizarPerfil(this.formPerfil.getRawValue()).subscribe({
       next: () => {
-        this.perfilOk.set(true);
-        this.mensajePerfil.set('Datos actualizados correctamente.');
+        this.mensajePerfil.set(null);
         this.guardandoPerfil.set(false);
+        this.toast.exito('Datos actualizados correctamente.');
       },
       error: (e) => {
-        this.perfilOk.set(false);
         this.mensajePerfil.set(mensajeError(e, 'No se pudieron guardar los cambios.'));
         this.guardandoPerfil.set(false);
       },
@@ -222,13 +213,12 @@ export class PerfilComponent {
 
     this.auth.cambiarPassword({ passwordActual, passwordNueva }).subscribe({
       next: () => {
-        this.passwordOk.set(true);
-        this.mensajePassword.set('Contraseña actualizada correctamente.');
+        this.mensajePassword.set(null);
         this.guardandoPassword.set(false);
         this.formPassword.reset();
+        this.toast.exito('Contraseña actualizada correctamente.');
       },
       error: (e) => {
-        this.passwordOk.set(false);
         this.mensajePassword.set(mensajeError(e, 'No se pudo actualizar la contraseña.'));
         this.guardandoPassword.set(false);
       },
