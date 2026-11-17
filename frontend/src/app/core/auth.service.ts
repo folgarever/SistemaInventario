@@ -113,31 +113,13 @@ export class AuthService {
     return this.http.put<{ success: boolean; message?: string }>(`${this.apiUrl}/password`, data);
   }
 
-  solicitarVerificacionEmail(): Observable<{
-    success: boolean;
-    message?: string;
-    data?: { enviado: boolean };
-  }> {
-    return this.http.post<{ success: boolean; message?: string; data?: { enviado: boolean } }>(
-      `${this.apiUrl}/verify-email/request`,
-      {},
-    );
-  }
-
-  verificarEmail(token: string): Observable<{ success: boolean; message?: string }> {
-    return this.http.post<{ success: boolean; message?: string }>(`${this.apiUrl}/verify-email`, {
-      token,
-    });
-  }
-
   eliminarCuenta(password: string): Observable<{ success: boolean; message?: string }> {
     return this.http.delete<{ success: boolean; message?: string }>(`${this.apiUrl}/account`, {
       body: { password },
     });
   }
 
-  // Refresca los datos del usuario en memoria y en localStorage (por ejemplo,
-  // tras verificar el correo, para actualizar el distintivo del perfil).
+  // Refresca los datos del usuario en memoria y en localStorage.
   refrescarPerfil(): Observable<ApiResponse<Usuario>> {
     return this.obtenerPerfil().pipe(
       tap((res) => {

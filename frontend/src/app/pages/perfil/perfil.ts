@@ -64,28 +64,6 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
               <input id="username" type="text" class="form-control" [value]="usuario()?.username ?? ''" disabled />
             </div>
 
-            <div class="form-group">
-              <span class="form-label">Estado del correo</span>
-              @if (usuario()?.email_verificado) {
-                <div>
-                  <span class="badge badge-disponible"><span class="badge-dot"></span>Correo verificado</span>
-                </div>
-              } @else {
-                <div class="perfil-verif">
-                  <span class="badge badge-bajo"><span class="badge-dot"></span>Correo sin verificar</span>
-                  <button
-                    type="button"
-                    class="btn-uber btn-uber-outline btn-sm"
-                    [disabled]="enviandoVerificacion()"
-                    (click)="enviarVerificacion()"
-                  >
-                    {{ enviandoVerificacion() ? 'Enviando…' : 'Reenviar enlace' }}
-                  </button>
-                </div>
-                <span class="form-hint">Te enviaremos un enlace a tu correo para confirmarlo.</span>
-              }
-            </div>
-
             <button type="submit" class="btn-uber" [disabled]="guardandoPerfil()">
               @if (guardandoPerfil()) {
                 <span class="spinner"></span>
@@ -231,8 +209,6 @@ export class PerfilComponent implements OnInit {
   guardandoPassword = signal(false);
   mensajePassword = signal<string | null>(null);
 
-  enviandoVerificacion = signal(false);
-
   confirmarEliminar = signal(false);
   eliminando = signal(false);
   mensajeEliminar = signal<string | null>(null);
@@ -259,7 +235,7 @@ export class PerfilComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Refresca los datos (por ejemplo, el estado de verificación del correo).
+    // Refresca los datos del usuario desde el servidor.
     this.auth.refrescarPerfil().subscribe({ error: () => {} });
   }
 
@@ -311,27 +287,6 @@ export class PerfilComponent implements OnInit {
       error: (e) => {
         this.mensajePassword.set(mensajeError(e, 'No se pudo actualizar la contraseña.'));
         this.guardandoPassword.set(false);
-      },
-    });
-  }
-
-  enviarVerificacion(): void {
-    this.enviandoVerificacion.set(true);
-
-    this.auth.solicitarVerificacionEmail().subscribe({
-      next: (res) => {
-        this.enviandoVerificacion.set(false);
-        if (res.data?.enviado) {
-          this.toast.exito('Te enviamos un enlace de verificación a tu correo.');
-        } else {
-          this.toast.error(
-            'No se pudo enviar el correo. Verifica que el envío de correos esté configurado.',
-          );
-        }
-      },
-      error: (e) => {
-        this.enviandoVerificacion.set(false);
-        this.toast.error(mensajeError(e, 'No se pudo enviar el enlace de verificación.'));
       },
     });
   }
