@@ -1,5 +1,7 @@
 # Sistema de Inventario
 
+![CI](https://github.com/folgarever/SistemaInventario/actions/workflows/ci.yml/badge.svg)
+
 Aplicación web para administrar y controlar el inventario de una tienda: productos,
 categorías, proveedores, entradas, salidas, ajustes, movimientos, alertas de stock,
 reportes y dashboard.
@@ -116,6 +118,13 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 - **Esquema de base de datos:** validado contra un PostgreSQL temporal; cubre la
   creación de tablas y RPC, entradas multi-producto, idempotencia, salidas con stock
   insuficiente, motivos inválidos, ajustes y la inmutabilidad de los movimientos.
+- **Backend (unitarias):** utilidades, middlewares y validaciones del servicio de
+  autenticación con el runner de pruebas de Node (no requiere base de datos).
+
+  ```bash
+  cd backend && npm test
+  ```
+
 - **Frontend (unitarias):**
 
   ```bash
@@ -123,6 +132,10 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
   ```
 
 - **Compilación:** `cd backend && npm run build` y `cd frontend && npm run build`.
+
+- **Integración continua:** el flujo de GitHub Actions en `.github/workflows/ci.yml`
+  compila y ejecuta las pruebas del backend y del frontend en cada push a `main` o
+  `folgarever` y en cada pull request hacia `main`.
 
 ## Despliegue en Vercel
 
