@@ -102,6 +102,17 @@ comprado y descartar recomendaciones que no interesan por ahora. Se guarda en el
 exportar a **PDF** y las recomendaciones se actualizan con el botón *Actualizar* (o al abrir la
 página), conservando las cantidades y marcas que ya hayas hecho.
 
+## Manual de usuario
+
+El manual de usuario está en **`docs/Manual-Usuario.pdf`** (13 páginas): explica cómo crear la
+cuenta, usar cada módulo (panel, productos, movimientos, conteo físico, lista de compra y
+reportes) y las preguntas frecuentes.
+
+- `docs/manual-usuario/manual.html` — fuente del manual (HTML con estilos de impresión).
+- `docs/manual-usuario/generar-pdf.mjs` — regenera el PDF con Chrome en modo *headless*
+  (`node docs/manual-usuario/generar-pdf.mjs`). Requiere Chrome o Edge; se puede indicar la
+  ruta con la variable de entorno `CHROME_PATH`.
+
 ## API REST
 
 Todos los endpoints (excepto el registro e inicio de sesión) requieren el encabezado
