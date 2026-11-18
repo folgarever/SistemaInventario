@@ -1,0 +1,13 @@
+@if (disponible()) {
+  <div class="update-banner" role="status" aria-live="polite">
+    <span class="update-text">Hay una versión nueva disponible.</span>
+    <button
+      type="button"
+      class="update-btn"
+      [disabled]="actualizando()"
+      (click)="actualizar()"
+    >
+      {{ actualizando() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </div>
+}
