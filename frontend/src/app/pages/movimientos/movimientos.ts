@@ -12,6 +12,7 @@ import { ToastService } from '../../core/toast.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { ahoraLocalInput, aISO, fechaHora } from '../../core/fecha.utils';
 import { formatoCantidad, formatoMoneda, numero } from '../../core/formato.utils';
+import { existenciasTrasDevolucion } from '../../core/devolucion.utils';
 import { nuevoUuid } from '../../core/uuid.utils';
 
 interface Opcion {
@@ -19,7 +20,7 @@ interface Opcion {
   etiqueta: string;
 }
 
-type ModoForm = 'compra' | 'venta' | 'ajuste';
+type ModoForm = 'compra' | 'venta' | 'ajuste' | 'devolucion';
 
 @Component({
   selector: 'app-movimientos',
@@ -57,6 +58,14 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
           >
             ⇄ Ajustar existencias
           </button>
+          <button
+            type="button"
+            class="btn-uber btn-uber-outline"
+            [class.is-active]="modoForm() === 'devolucion'"
+            (click)="abrirForm('devolucion')"
+          >
+            ↩ Registrar devolución
+          </button>
         </div>
       </div>
 
@@ -66,6 +75,8 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
         <span class="proceso-paso"><span class="proceso-num">↓</span> La venta lo baja</span>
         <span class="proceso-sep">·</span>
         <span class="proceso-paso"><span class="proceso-num">⇄</span> El ajuste corrige el conteo</span>
+        <span class="proceso-sep">·</span>
+        <span class="proceso-paso"><span class="proceso-num">↩</span> La devolución lo reintegra</span>
       </div>
 
       @if (errorForm()) {
@@ -324,6 +335,79 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
         </div>
       }
 
+      <!-- DEVOLUCION -->
+      @if (modoForm() === 'devolucion') {
+        <div class="card mb-16">
+          <div class="card-header">
+            <h2 class="section-title">Registrar devolución</h2>
+            <span class="badge badge-entrada"><span class="badge-dot"></span>↩ Reintegra el stock</span>
+          </div>
+
+          <form [formGroup]="formDevolucion" (ngSubmit)="registrarDevolucion()">
+            <div class="form-group">
+              <label class="form-label" for="d_producto">Producto</label>
+              <select id="d_producto" class="form-select form-control" formControlName="producto_id">
+                <option value="">Selecciona un producto…</option>
+                @for (p of productos(); track p.id) {
+                  <option [value]="p.id">
+                    {{ p.nombre }} ({{ p.sku }}) — {{ formatoCantidad(p.stock) }} {{ p.unidad_medida }}
+                  </option>
+                }
+              </select>
+              @if (productoDevolucion(); as ps) {
+                <span class="form-hint">
+                  En el sistema: {{ formatoCantidad(ps.stock) }} {{ ps.unidad_medida }} · Precio de
+                  venta: {{ formatoMoneda(ps.precio_venta) }}
+                </span>
+              }
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="d_cantidad">Cantidad devuelta</label>
+                <input
+                  id="d_cantidad"
+                  type="number"
+                  class="form-control"
+                  step="0.001"
+                  min="0"
+                  formControlName="cantidad"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="d_fecha">Fecha</label>
+                <input id="d_fecha" type="datetime-local" class="form-control" formControlName="fecha" />
+              </div>
+            </div>
+
+            @if (productoDevolucion(); as ps) {
+              <div class="alert">
+                <span>
+                  Existencias resultantes:
+                  <strong>{{ formatoCantidad(existenciasDevolucion()) }} {{ ps.unidad_medida }}</strong>
+                  ({{ formatoCantidad(ps.stock) }} + {{ formatoCantidad(valorDevolucion().cantidad) }})
+                </span>
+              </div>
+            }
+
+            <div class="form-group mt-16">
+              <label class="form-label" for="d_obs">Observaciones (opcional)</label>
+              <textarea id="d_obs" class="form-control" rows="2" formControlName="observaciones"></textarea>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-uber btn-uber-outline" (click)="cerrarForm()">Cancelar</button>
+              <button type="submit" class="btn-uber" [disabled]="guardando()">
+                @if (guardando()) {
+                  <span class="spinner"></span>
+                }
+                {{ guardando() ? 'Registrando…' : 'Registrar devolución' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
       @if (error()) {
         <div class="alert alert-danger mb-16">{{ error() }}</div>
       }
@@ -376,7 +460,7 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
                     <span class="empty-state-icon" aria-hidden="true">↕</span>
                     <span class="empty-state-title">Sin movimientos</span>
                     <span class="empty-state-text">
-                      Registra una compra, una venta o un ajuste para verlos aquí.
+                      Registra una compra, una venta, un ajuste o una devolución para verlos aquí.
                     </span>
                   </div>
                 </td>
@@ -394,7 +478,11 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
                         <span class="badge badge-salida"><span class="badge-dot"></span>↓ Venta</span>
                       }
                       @default {
-                        <span class="badge badge-ajuste"><span class="badge-dot"></span>⇄ Ajuste</span>
+                        @if (m.motivo === 'DEVOLUCION') {
+                          <span class="badge badge-entrada"><span class="badge-dot"></span>↩ Devolución</span>
+                        } @else {
+                          <span class="badge badge-ajuste"><span class="badge-dot"></span>⇄ Ajuste</span>
+                        }
                       }
                     }
                   </td>
@@ -411,7 +499,7 @@ type ModoForm = 'compra' | 'venta' | 'ajuste';
                     {{ formatoCantidad(m.existencias_posteriores) }}
                   </td>
                   <td class="text-muted">
-                    {{ m.descripcion }}
+                    {{ m.motivo === 'DEVOLUCION' ? 'Devolución de mercadería' : m.descripcion }}
                     @if (m.motivo) {
                       <span class="badge badge-neutral" style="margin-left: 6px;">{{ m.motivo }}</span>
                     }
@@ -560,6 +648,25 @@ export class MovimientosComponent implements OnInit {
     return numero(this.formAjuste.getRawValue().existencias_fisicas) - (p ? numero(p.stock) : 0);
   });
 
+  // --- Devolución ---
+  // Una devolución reintegra mercadería al inventario. Se registra como un
+  // ajuste con motivo DEVOLUCION, calculando las existencias resultantes como
+  // el stock actual más la cantidad devuelta.
+  formDevolucion = this.fb.nonNullable.group({
+    producto_id: ['', [Validators.required]],
+    cantidad: ['1', [Validators.required]],
+    fecha: [ahoraLocalInput()],
+    observaciones: [''],
+  });
+  productoDevolucion = signal<Producto | null>(null);
+  valorDevolucion = signal(this.formDevolucion.getRawValue());
+  existenciasDevolucion = computed(() =>
+    existenciasTrasDevolucion(
+      numero(this.productoDevolucion()?.stock ?? 0),
+      numero(this.valorDevolucion().cantidad),
+    ),
+  );
+
   private crearLineaCompra() {
     return this.fb.nonNullable.group({
       producto_id: ['', [Validators.required]],
@@ -571,12 +678,18 @@ export class MovimientosComponent implements OnInit {
   ngOnInit(): void {
     this.formCompra.valueChanges.subscribe(() => this.valorCompra.set(this.formCompra.getRawValue()));
     this.formVenta.valueChanges.subscribe(() => this.valorVenta.set(this.formVenta.getRawValue()));
+    this.formDevolucion.valueChanges.subscribe(() =>
+      this.valorDevolucion.set(this.formDevolucion.getRawValue()),
+    );
 
     this.formVenta.get('producto_id')!.valueChanges.subscribe((id) => {
       this.productoVenta.set(this.productos().find((p) => p.id === id) ?? null);
     });
     this.formAjuste.get('producto_id')!.valueChanges.subscribe((id) => {
       this.productoAjuste.set(this.productos().find((p) => p.id === id) ?? null);
+    });
+    this.formDevolucion.get('producto_id')!.valueChanges.subscribe((id) => {
+      this.productoDevolucion.set(this.productos().find((p) => p.id === id) ?? null);
     });
 
     this.filtroProducto.valueChanges.subscribe(() => this.reiniciar());
@@ -605,6 +718,8 @@ export class MovimientosComponent implements OnInit {
     if (vId) this.productoVenta.set(this.productos().find((p) => p.id === vId) ?? null);
     const aId = this.formAjuste.get('producto_id')!.value;
     if (aId) this.productoAjuste.set(this.productos().find((p) => p.id === aId) ?? null);
+    const dId = this.formDevolucion.get('producto_id')!.value;
+    if (dId) this.productoDevolucion.set(this.productos().find((p) => p.id === dId) ?? null);
   }
 
   abrirForm(modo: ModoForm): void {
@@ -772,6 +887,57 @@ export class MovimientosComponent implements OnInit {
         },
         error: (e) => {
           this.errorForm.set(mensajeError(e, 'No se pudo registrar el ajuste.'));
+          this.guardando.set(false);
+        },
+      });
+  }
+
+  // --- Devolución ---
+  registrarDevolucion(): void {
+    const valores = this.formDevolucion.getRawValue();
+    if (this.formDevolucion.invalid || numero(valores.cantidad) <= 0) {
+      this.formDevolucion.markAllAsTouched();
+      this.errorForm.set('Selecciona un producto e ingresa una cantidad mayor a 0.');
+      return;
+    }
+
+    const producto = this.productoDevolucion();
+    if (!producto) {
+      this.errorForm.set('Selecciona el producto que se devuelve.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.errorForm.set(null);
+
+    this.ajusteService
+      .registrar({
+        producto_id: valores.producto_id,
+        existencias_fisicas: existenciasTrasDevolucion(numero(producto.stock), numero(valores.cantidad)),
+        motivo: 'DEVOLUCION',
+        observaciones: valores.observaciones || null,
+        fecha: aISO(valores.fecha) ?? null,
+        client_request_id: nuevoUuid(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.guardando.set(false);
+          this.toast.exito(
+            res.data.idempotente ? 'La devolución ya había sido registrada.' : 'Devolución registrada.',
+          );
+          this.formDevolucion.reset({
+            producto_id: '',
+            cantidad: '1',
+            fecha: ahoraLocalInput(),
+            observaciones: '',
+          });
+          this.productoDevolucion.set(null);
+          this.cargarCombos();
+          this.cargar();
+          this.alertas.cargar();
+        },
+        error: (e) => {
+          this.errorForm.set(mensajeError(e, 'No se pudo registrar la devolución.'));
           this.guardando.set(false);
         },
       });

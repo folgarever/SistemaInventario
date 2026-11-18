@@ -48,7 +48,7 @@ SistemaInventario/
 | Entradas | Registro multi-producto de compras con proveedor, totales e historial. |
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
-| Movimientos | Kardex de solo lectura: entradas, salidas y ajustes con existencias antes/después. |
+| Movimientos | Registra compras, ventas, ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
 | Reportes | Inventario valorizado, movimientos, ventas y ganancia por rango, lista de reposición, mermas y rotación. Exportación a PDF con gráficos. |
