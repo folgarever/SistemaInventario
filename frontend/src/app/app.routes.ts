@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/conteo/conteo').then((m) => m.ConteoComponent),
   },
   {
+    path: 'compras',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/compras/compras').then((m) => m.ComprasComponent),
+  },
+  {
     path: 'reportes',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/reportes/reportes').then((m) => m.ReportesComponent),

@@ -49,6 +49,7 @@ SistemaInventario/
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
 | Conteo físico | Recorrido guiado de los productos para contar las existencias y generar los ajustes de las diferencias. La frecuencia (diario, semanal o quincenal) se configura y se recuerda para avisar cuándo toca el próximo conteo. La hoja de conteo se puede exportar a PDF. |
+| Compras | Lista de compra de trabajo: agrega artículos a mano y suma las recomendaciones de bajo stock del inventario, agrupada por proveedor, con cantidades editables y exportación a PDF. Se guarda en el navegador. |
 | Movimientos | Registra compras, ventas (carrito multi-producto), ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Avisos | Notificaciones locales de stock bajo: avisa cuando un producto se agota o baja del mínimo mientras la app está abierta (se activa desde el perfil). |
@@ -84,6 +85,22 @@ línea falla, las que sí se registraron se quitan para poder reintentar solo la
 
 La **frecuencia** de conteo (diario, semanal o quincenal) se guarda en el navegador y, a partir
 del último conteo registrado, la app muestra cuándo toca el siguiente o si ya está vencido.
+
+La hoja de conteo (con las existencias del sistema, lo contado y la diferencia) se puede
+exportar a **PDF** con el botón *Exportar PDF*.
+
+### Lista de compra
+
+La página **Compras** arma el listado de lo que falta comprar. Por un lado integra las
+**recomendaciones de bajo stock** del inventario (los productos agotados o por debajo del
+mínimo, con la cantidad sugerida para volver al doble del mínimo) y, por otro, permite
+**agregar artículos a mano** (por ejemplo, bolsas o artículos que no están en el catálogo).
+
+La lista se **agrupa por proveedor**, deja editar la cantidad de cada línea, marcar lo ya
+comprado y descartar recomendaciones que no interesan por ahora. Se guarda en el navegador
+(`localStorage`) porque es una lista de trabajo: no toca el inventario ni el stock. Se puede
+exportar a **PDF** y las recomendaciones se actualizan con el botón *Actualizar* (o al abrir la
+página), conservando las cantidades y marcas que ya hayas hecho.
 
 ## API REST
 
