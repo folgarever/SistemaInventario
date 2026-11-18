@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +20,15 @@ import {
   margenGanancia,
   numero,
 } from '../../core/formato.utils';
+import {
+  ColumnaProducto,
+  ORDEN_PRODUCTO_INICIAL,
+  OrdenProducto,
+  alternarOrden,
+  ariaOrden,
+  indicadorOrden,
+  ordenarProductos,
+} from '../../core/productos.utils';
 
 @Component({
   selector: 'app-productos',
@@ -58,6 +67,12 @@ import {
             <option [value]="c.id">{{ c.nombre }}</option>
           }
         </select>
+        <select class="form-select form-control" [formControl]="filtroProveedor">
+          <option value="">Todos los proveedores</option>
+          @for (p of proveedores(); track p.id) {
+            <option [value]="p.id">{{ p.nombre }}</option>
+          }
+        </select>
         <label class="checkbox-inline">
           <input type="checkbox" [checked]="soloBajoStock()" (change)="alternarBajoStock($event)" />
           Solo bajo stock
@@ -70,6 +85,11 @@ import {
           />
           Mostrar inactivos
         </label>
+        @if (hayFiltros()) {
+          <button type="button" class="btn-uber btn-uber-outline btn-sm" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
+        }
       </div>
 
       @if (error()) {
@@ -80,14 +100,46 @@ import {
         <table class="table">
           <thead>
             <tr>
-              <th>SKU</th>
-              <th>Producto</th>
-              <th>Categoría</th>
-              <th class="text-right">Costo</th>
-              <th class="text-right">Precio venta</th>
-              <th class="text-right">Ganancia</th>
-              <th class="text-right">Existencias</th>
-              <th>Estado</th>
+              <th [attr.aria-sort]="ariaOrden(orden(), 'sku')">
+                <button type="button" class="th-orden" (click)="ordenarPor('sku')">
+                  SKU<span class="th-orden-icono">{{ indicadorOrden(orden(), 'sku') }}</span>
+                </button>
+              </th>
+              <th [attr.aria-sort]="ariaOrden(orden(), 'nombre')">
+                <button type="button" class="th-orden" (click)="ordenarPor('nombre')">
+                  Producto<span class="th-orden-icono">{{ indicadorOrden(orden(), 'nombre') }}</span>
+                </button>
+              </th>
+              <th [attr.aria-sort]="ariaOrden(orden(), 'categoria')">
+                <button type="button" class="th-orden" (click)="ordenarPor('categoria')">
+                  Categoría<span class="th-orden-icono">{{ indicadorOrden(orden(), 'categoria') }}</span>
+                </button>
+              </th>
+              <th class="text-right" [attr.aria-sort]="ariaOrden(orden(), 'precio_compra')">
+                <button type="button" class="th-orden" (click)="ordenarPor('precio_compra')">
+                  Costo<span class="th-orden-icono">{{ indicadorOrden(orden(), 'precio_compra') }}</span>
+                </button>
+              </th>
+              <th class="text-right" [attr.aria-sort]="ariaOrden(orden(), 'precio_venta')">
+                <button type="button" class="th-orden" (click)="ordenarPor('precio_venta')">
+                  Precio venta<span class="th-orden-icono">{{ indicadorOrden(orden(), 'precio_venta') }}</span>
+                </button>
+              </th>
+              <th class="text-right" [attr.aria-sort]="ariaOrden(orden(), 'ganancia')">
+                <button type="button" class="th-orden" (click)="ordenarPor('ganancia')">
+                  Ganancia<span class="th-orden-icono">{{ indicadorOrden(orden(), 'ganancia') }}</span>
+                </button>
+              </th>
+              <th class="text-right" [attr.aria-sort]="ariaOrden(orden(), 'stock')">
+                <button type="button" class="th-orden" (click)="ordenarPor('stock')">
+                  Existencias<span class="th-orden-icono">{{ indicadorOrden(orden(), 'stock') }}</span>
+                </button>
+              </th>
+              <th [attr.aria-sort]="ariaOrden(orden(), 'estado')">
+                <button type="button" class="th-orden" (click)="ordenarPor('estado')">
+                  Estado<span class="th-orden-icono">{{ indicadorOrden(orden(), 'estado') }}</span>
+                </button>
+              </th>
               <th class="text-right">Acciones</th>
             </tr>
           </thead>
@@ -106,20 +158,33 @@ import {
                   <td><span class="skeleton skeleton-line" style="width: 80%"></span></td>
                 </tr>
               }
-            } @else if (productos().length === 0) {
+            } @else if (productosOrdenados().length === 0) {
               <tr>
                 <td colspan="9">
                   <div class="empty-state">
                     <span class="empty-state-icon" aria-hidden="true">▤</span>
-                    <span class="empty-state-title">Sin productos</span>
+                    <span class="empty-state-title">{{ hayFiltros() ? 'Sin resultados' : 'Sin productos' }}</span>
                     <span class="empty-state-text">
-                      Agrega tu primer producto para empezar a controlar el inventario.
+                      @if (hayFiltros()) {
+                        No hay productos que coincidan con los filtros aplicados.
+                      } @else {
+                        Agrega tu primer producto para empezar a controlar el inventario.
+                      }
                     </span>
+                    @if (hayFiltros()) {
+                      <button
+                        type="button"
+                        class="btn-uber btn-uber-outline btn-sm mt-16"
+                        (click)="limpiarFiltros()"
+                      >
+                        Limpiar filtros
+                      </button>
+                    }
                   </div>
                 </td>
               </tr>
             } @else {
-              @for (p of productos(); track p.id) {
+              @for (p of productosOrdenados(); track p.id) {
                 <tr>
                   <td class="font-mono text-muted">{{ p.sku }}</td>
                   <td>
@@ -390,6 +455,13 @@ export class ProductosComponent implements OnInit {
   soloBajoStock = signal(false);
   buscar = this.fb.nonNullable.control('');
   filtroCategoria = this.fb.nonNullable.control('');
+  filtroProveedor = this.fb.nonNullable.control('');
+
+  // Orden de la tabla (por columna) y lista ya ordenada para mostrar y exportar.
+  orden = signal<OrdenProducto>(ORDEN_PRODUCTO_INICIAL);
+  productosOrdenados = computed(() => ordenarProductos(this.productos(), this.orden()));
+  readonly indicadorOrden = indicadorOrden;
+  readonly ariaOrden = ariaOrden;
 
   mostrarForm = signal(false);
   editando = signal<Producto | null>(null);
@@ -426,6 +498,10 @@ export class ProductosComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.cargar());
 
+    this.filtroProveedor.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cargar());
+
     // Permite abrir la lista ya filtrada, por ejemplo desde las alertas del Panel.
     if (this.route.snapshot.queryParamMap.get('bajoStock') === '1') {
       this.soloBajoStock.set(true);
@@ -452,6 +528,7 @@ export class ProductosComponent implements OnInit {
       .listar({
         buscar: this.buscar.value || undefined,
         categoriaId: this.filtroCategoria.value || undefined,
+        proveedorId: this.filtroProveedor.value || undefined,
         incluirInactivos: this.incluirInactivos(),
         soloBajoStock: this.soloBajoStock(),
       })
@@ -475,6 +552,31 @@ export class ProductosComponent implements OnInit {
   alternarBajoStock(evento: Event): void {
     this.soloBajoStock.set((evento.target as HTMLInputElement).checked);
     this.cargar();
+  }
+
+  // Indica si hay algun filtro activo (para mostrar "Limpiar" y el estado vacio).
+  hayFiltros(): boolean {
+    return (
+      !!this.buscar.value ||
+      !!this.filtroCategoria.value ||
+      !!this.filtroProveedor.value ||
+      this.soloBajoStock() ||
+      this.incluirInactivos()
+    );
+  }
+
+  limpiarFiltros(): void {
+    // Sin emitir eventos para no disparar varias cargas; se recarga una sola vez.
+    this.buscar.setValue('', { emitEvent: false });
+    this.filtroCategoria.setValue('', { emitEvent: false });
+    this.filtroProveedor.setValue('', { emitEvent: false });
+    this.soloBajoStock.set(false);
+    this.incluirInactivos.set(false);
+    this.cargar();
+  }
+
+  ordenarPor(columna: ColumnaProducto): void {
+    this.orden.set(alternarOrden(this.orden(), columna));
   }
 
   estado(p: Producto) {
@@ -684,7 +786,7 @@ export class ProductosComponent implements OnInit {
 
   // Exporta el listado visible de productos a un PDF.
   async exportar(): Promise<void> {
-    const productos = this.productos();
+    const productos = this.productosOrdenados();
     if (productos.length === 0) return;
 
     this.exportando.set(true);

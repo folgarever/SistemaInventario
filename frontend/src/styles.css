@@ -771,6 +771,42 @@ p {
   white-space: nowrap;
 }
 
+/* Encabezados ordenables: el th contiene un boton con la etiqueta y la flecha. */
+.th-orden {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.th-orden:hover {
+  color: var(--text-primary);
+}
+
+.th-orden:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+.th-orden-icono {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+/* Sin flecha no ocupa espacio (columnas que no estan ordenando). */
+.th-orden-icono:empty {
+  display: none;
+}
+
 .table tbody td {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);

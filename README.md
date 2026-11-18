@@ -44,7 +44,7 @@ SistemaInventario/
 | Autenticación | Registro, inicio de sesión, recuperación y restablecimiento de contraseña, perfil y eliminación de cuenta. |
 | Categorías | Catálogo de categorías con activación/desactivación y borrado seguro. |
 | Proveedores | Catálogo de proveedores con activación/desactivación y borrado seguro. |
-| Productos | Catálogo de productos (SKU, precios, stock mínimo, unidad de medida). El stock solo cambia por movimientos. |
+| Productos | Catálogo de productos (SKU, precios, stock mínimo, unidad de medida). El stock solo cambia por movimientos. Búsqueda por nombre/SKU, filtros por categoría y proveedor, orden por cualquier columna y exportación a PDF en el orden visible. |
 | Entradas | Registro multi-producto de compras con proveedor, totales e historial. |
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
