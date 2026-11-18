@@ -18,6 +18,9 @@ import { RouterLink } from '@angular/router';
         </div>
 
         <div class="footer-links">
+          <a class="footer-link" href="/manual/Manual-Usuario.pdf" download="Manual-Usuario.pdf">
+            Manual de usuario (PDF)
+          </a>
           <a routerLink="/aviso-privacidad" class="footer-link">Aviso de privacidad</a>
           <a class="footer-mail" href="mailto:folgarever19@gmail.com">folgarever19&#64;gmail.com</a>
         </div>

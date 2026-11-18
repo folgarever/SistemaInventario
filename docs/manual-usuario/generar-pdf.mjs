@@ -13,7 +13,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const HTML = join(AQUI, 'manual.html');
-const OUT = resolve(AQUI, '..', 'Manual-Usuario.pdf');
+// El PDF vive en los assets del frontend para poder descargarlo desde la app.
+const OUT = resolve(AQUI, '..', '..', 'frontend', 'public', 'manual', 'Manual-Usuario.pdf');
 const PERFIL = join(tmpdir(), 'manual-usuario-chrome');
 const PUERTO = 9333;
 

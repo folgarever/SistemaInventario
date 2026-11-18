@@ -67,6 +67,9 @@ que se puede **instalar en el móvil** (Añadir a pantalla de inicio) y abrir si
 - `frontend/ngsw-config.json` — grupos de caché: *app shell* (precarga), imágenes de marca
   (bajo demanda) y tipografía de Google Fonts.
 - El service worker se registra **solo en producción** (no en `ng serve`).
+- La barra superior muestra un botón **Instalar app** cuando el navegador lo permite. En
+  iPhone/iPad (que no ofrecen el aviso automático) el botón abre las instrucciones para
+  *Añadir a pantalla de inicio*.
 
 ### Avisos de stock bajo
 
@@ -104,14 +107,15 @@ página), conservando las cantidades y marcas que ya hayas hecho.
 
 ## Manual de usuario
 
-El manual de usuario está en **`docs/Manual-Usuario.pdf`** (13 páginas): explica cómo crear la
-cuenta, usar cada módulo (panel, productos, movimientos, conteo físico, lista de compra y
-reportes) y las preguntas frecuentes.
+El manual de usuario está en **`frontend/public/manual/Manual-Usuario.pdf`** (13 páginas):
+explica cómo crear la cuenta, usar cada módulo (panel, productos, movimientos, conteo físico,
+lista de compra y reportes) y las preguntas frecuentes. Se descarga desde el enlace
+**Manual de usuario (PDF)** del pie de página de la aplicación.
 
 - `docs/manual-usuario/manual.html` — fuente del manual (HTML con estilos de impresión).
-- `docs/manual-usuario/generar-pdf.mjs` — regenera el PDF con Chrome en modo *headless*
-  (`node docs/manual-usuario/generar-pdf.mjs`). Requiere Chrome o Edge; se puede indicar la
-  ruta con la variable de entorno `CHROME_PATH`.
+- `docs/manual-usuario/generar-pdf.mjs` — regenera el PDF con Chrome en modo *headless* y lo
+  deja en `frontend/public/manual/` (`node docs/manual-usuario/generar-pdf.mjs`). Requiere
+  Chrome o Edge; se puede indicar la ruta con la variable de entorno `CHROME_PATH`.
 
 ## API REST
 
