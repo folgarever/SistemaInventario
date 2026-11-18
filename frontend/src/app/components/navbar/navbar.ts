@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
 import { AlertaService } from '../../services/alerta.service';
+import { InstalarPwaComponent } from '../instalar-pwa/instalar-pwa';
 
 interface EnlaceNav {
   ruta: string;
@@ -14,7 +15,7 @@ interface EnlaceNav {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, InstalarPwaComponent],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
