@@ -1,5 +1,7 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { Movimiento, Producto, Proveedor } from '../../models';
 import { MovimientoService } from '../../services/movimiento.service';
 import { ProductoService } from '../../services/producto.service';
@@ -192,36 +194,7 @@ type ModoForm = 'compra' | 'venta' | 'ajuste' | 'devolucion';
           </div>
 
           <form [formGroup]="formVenta" (ngSubmit)="registrarVenta()">
-            <div class="form-group">
-              <label class="form-label" for="v_producto">Producto</label>
-              <select id="v_producto" class="form-select form-control" formControlName="producto_id">
-                <option value="">Selecciona un producto…</option>
-                @for (p of productos(); track p.id) {
-                  <option [value]="p.id">
-                    {{ p.nombre }} ({{ p.sku }}) — {{ formatoCantidad(p.stock) }} {{ p.unidad_medida }}
-                  </option>
-                }
-              </select>
-              @if (productoVenta(); as ps) {
-                <span class="form-hint">
-                  Disponible: {{ formatoCantidad(ps.stock) }} {{ ps.unidad_medida }} ·
-                  Precio de venta: {{ formatoMoneda(ps.precio_venta) }}
-                </span>
-              }
-            </div>
-
             <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="v_cantidad">Cantidad</label>
-                <input
-                  id="v_cantidad"
-                  type="number"
-                  class="form-control"
-                  step="0.001"
-                  min="0"
-                  formControlName="cantidad"
-                />
-              </div>
               <div class="form-group">
                 <label class="form-label" for="v_motivo">Motivo</label>
                 <select id="v_motivo" class="form-select form-control" formControlName="motivo">
@@ -236,14 +209,52 @@ type ModoForm = 'compra' | 'venta' | 'ajuste' | 'devolucion';
               </div>
             </div>
 
-            @if (productoVenta(); as ps) {
-              <div class="alert">
-                <span>
-                  Total de la venta: <strong>{{ formatoMoneda(totalVenta()) }}</strong>
-                  ({{ formatoCantidad(formVenta.getRawValue().cantidad) }} {{ ps.unidad_medida }})
-                </span>
-              </div>
-            }
+            <div class="form-seccion">
+              <span class="form-seccion-num">1</span>
+              <h3 class="section-title">Productos que vendes</h3>
+            </div>
+
+            <div class="lineas" formArrayName="items">
+              @for (linea of itemsVenta.controls; track $index; let i = $index) {
+                <div class="linea-entrada linea-venta" [formGroupName]="i">
+                  <select class="form-select form-control" formControlName="producto_id">
+                    <option value="">Selecciona un producto…</option>
+                    @for (p of productos(); track p.id) {
+                      <option [value]="p.id">
+                        {{ p.nombre }} ({{ p.sku }}) — {{ formatoCantidad(p.stock) }} {{ p.unidad_medida }}
+                      </option>
+                    }
+                  </select>
+                  <input
+                    type="number"
+                    class="form-control"
+                    step="0.001"
+                    min="0"
+                    placeholder="Cantidad"
+                    formControlName="cantidad"
+                  />
+                  <span class="linea-subtotal font-mono">{{ formatoMoneda(subtotalesVenta()[i] || 0) }}</span>
+                  <button
+                    type="button"
+                    class="btn-uber btn-uber-danger btn-sm"
+                    [disabled]="itemsVenta.length <= 1"
+                    (click)="quitarLineaVenta(i)"
+                    aria-label="Quitar línea"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+
+            <button type="button" class="btn-uber btn-uber-outline btn-sm mt-8" (click)="agregarLineaVenta()">
+              + Agregar producto
+            </button>
+
+            <div class="total-entrada">
+              <span class="stat-label">Total de la venta</span>
+              <span class="total-valor font-mono">{{ formatoMoneda(totalVenta()) }}</span>
+            </div>
 
             <div class="form-group mt-16">
               <label class="form-label" for="v_obs">Observaciones (opcional)</label>
@@ -542,6 +553,7 @@ type ModoForm = 'compra' | 'venta' | 'ajuste' | 'devolucion';
 })
 export class MovimientosComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
   private movimientoService = inject(MovimientoService);
   private productoService = inject(ProductoService);
   private proveedorService = inject(ProveedorService);
@@ -619,20 +631,23 @@ export class MovimientosComponent implements OnInit {
     return this.formCompra.controls.items;
   }
 
-  // --- Venta ---
+  // --- Venta (carrito multi-producto) ---
   formVenta = this.fb.nonNullable.group({
-    producto_id: ['', [Validators.required]],
-    cantidad: ['1', [Validators.required]],
     motivo: ['VENTA', [Validators.required]],
     fecha: [ahoraLocalInput()],
     observaciones: [''],
+    items: this.fb.array([this.crearLineaVenta()]),
   });
-  productoVenta = signal<Producto | null>(null);
+
   private valorVenta = signal(this.formVenta.getRawValue());
-  totalVenta = computed(() => {
-    const p = this.productoVenta();
-    return numero(this.valorVenta().cantidad) * numero(p?.precio_venta ?? 0);
-  });
+  subtotalesVenta = computed(() =>
+    this.valorVenta().items.map((it) => numero(it.cantidad) * this.precioVentaDe(it.producto_id)),
+  );
+  totalVenta = computed(() => this.subtotalesVenta().reduce((a, b) => a + b, 0));
+
+  get itemsVenta() {
+    return this.formVenta.controls.items;
+  }
 
   // --- Ajuste ---
   formAjuste = this.fb.nonNullable.group({
@@ -675,6 +690,25 @@ export class MovimientosComponent implements OnInit {
     });
   }
 
+  private crearLineaVenta() {
+    const linea = this.fb.nonNullable.group({
+      client_request_id: [nuevoUuid()],
+      producto_id: ['', [Validators.required]],
+      cantidad: ['1', [Validators.required]],
+    });
+    // Si cambia el producto, el identificador de idempotencia debe ser nuevo:
+    // el anterior pudo haberse usado ya para otro producto.
+    linea.controls.producto_id.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => linea.controls.client_request_id.setValue(nuevoUuid()));
+    return linea;
+  }
+
+  private precioVentaDe(id: string): number {
+    const producto = this.productos().find((p) => p.id === id);
+    return numero(producto?.precio_venta ?? 0);
+  }
+
   ngOnInit(): void {
     this.formCompra.valueChanges.subscribe(() => this.valorCompra.set(this.formCompra.getRawValue()));
     this.formVenta.valueChanges.subscribe(() => this.valorVenta.set(this.formVenta.getRawValue()));
@@ -682,9 +716,6 @@ export class MovimientosComponent implements OnInit {
       this.valorDevolucion.set(this.formDevolucion.getRawValue()),
     );
 
-    this.formVenta.get('producto_id')!.valueChanges.subscribe((id) => {
-      this.productoVenta.set(this.productos().find((p) => p.id === id) ?? null);
-    });
     this.formAjuste.get('producto_id')!.valueChanges.subscribe((id) => {
       this.productoAjuste.set(this.productos().find((p) => p.id === id) ?? null);
     });
@@ -714,8 +745,6 @@ export class MovimientosComponent implements OnInit {
   }
 
   private refrescarSeleccionados(): void {
-    const vId = this.formVenta.get('producto_id')!.value;
-    if (vId) this.productoVenta.set(this.productos().find((p) => p.id === vId) ?? null);
     const aId = this.formAjuste.get('producto_id')!.value;
     if (aId) this.productoAjuste.set(this.productos().find((p) => p.id === aId) ?? null);
     const dId = this.formDevolucion.get('producto_id')!.value;
@@ -799,48 +828,108 @@ export class MovimientosComponent implements OnInit {
       });
   }
 
-  // --- Venta ---
+  // --- Venta (carrito) ---
+  agregarLineaVenta(): void {
+    this.itemsVenta.push(this.crearLineaVenta());
+  }
+
+  quitarLineaVenta(i: number): void {
+    if (this.itemsVenta.length > 1) this.itemsVenta.removeAt(i);
+  }
+
   registrarVenta(): void {
-    if (this.formVenta.invalid || numero(this.formVenta.getRawValue().cantidad) <= 0) {
-      this.formVenta.markAllAsTouched();
-      this.errorForm.set('Selecciona un producto e ingresa una cantidad mayor a 0.');
+    const valores = this.formVenta.getRawValue();
+    const entradas = valores.items
+      .map((item, index) => ({ index, ...item }))
+      .filter((item) => item.producto_id && numero(item.cantidad) > 0);
+
+    if (entradas.length === 0) {
+      this.errorForm.set('Agrega al menos un producto con cantidad mayor a 0.');
       return;
     }
 
-    const valores = this.formVenta.getRawValue();
+    // Valida existencias antes de enviar, para dar un mensaje claro.
+    for (const item of entradas) {
+      const producto = this.productos().find((p) => p.id === item.producto_id);
+      if (producto && numero(item.cantidad) > numero(producto.stock)) {
+        this.errorForm.set(
+          `No hay existencias suficientes de ${producto.nombre}: disponible ` +
+            `${formatoCantidad(producto.stock)} ${producto.unidad_medida}.`,
+        );
+        return;
+      }
+    }
+
     this.guardando.set(true);
     this.errorForm.set(null);
 
-    this.salidaService
-      .registrar({
-        producto_id: valores.producto_id,
-        cantidad: valores.cantidad,
-        motivo: valores.motivo,
-        observaciones: valores.observaciones || null,
-        fecha: aISO(valores.fecha) ?? null,
-        client_request_id: nuevoUuid(),
-      })
-      .subscribe({
-        next: (res) => {
-          this.guardando.set(false);
-          this.toast.exito(res.data.idempotente ? 'La venta ya había sido registrada.' : 'Venta registrada.');
-          this.formVenta.reset({
-            producto_id: '',
-            cantidad: '1',
-            motivo: 'VENTA',
-            fecha: ahoraLocalInput(),
-            observaciones: '',
-          });
-          this.productoVenta.set(null);
-          this.cargarCombos();
-          this.cargar();
-          this.alertas.cargar();
-        },
-        error: (e) => {
-          this.errorForm.set(mensajeError(e, 'No se pudo registrar la venta.'));
-          this.guardando.set(false);
-        },
-      });
+    const fecha = aISO(valores.fecha) ?? null;
+    const observaciones = valores.observaciones || null;
+
+    // Cada linea se registra con su propio client_request_id, de modo que
+    // reintentar la venta no duplique las lineas que ya se registraron.
+    const peticiones = entradas.map((item) =>
+      this.salidaService
+        .registrar({
+          producto_id: item.producto_id,
+          cantidad: item.cantidad,
+          motivo: valores.motivo,
+          observaciones,
+          fecha,
+          client_request_id: item.client_request_id,
+        })
+        .pipe(
+          map(() => ({ ok: true as const, index: item.index })),
+          catchError((e) =>
+            of({
+              ok: false as const,
+              index: item.index,
+              mensaje: mensajeError(e, 'No se pudo registrar la venta.'),
+            }),
+          ),
+        ),
+    );
+
+    forkJoin(peticiones).subscribe((resultados) => {
+      this.guardando.set(false);
+
+      const exitos = resultados.filter((r): r is { ok: true; index: number } => r.ok);
+      const fallidos = resultados.filter(
+        (r): r is { ok: false; index: number; mensaje: string } => !r.ok,
+      );
+
+      this.cargarCombos();
+      this.cargar();
+      this.alertas.cargar();
+
+      if (fallidos.length === 0) {
+        this.toast.exito(
+          exitos.length === 1 ? 'Venta registrada.' : `Venta registrada (${exitos.length} productos).`,
+        );
+        this.reiniciarFormVenta();
+        return;
+      }
+
+      // Quita del carrito las lineas que si se registraron, de atras hacia
+      // adelante, y deja solo las que fallaron para reintentarlas.
+      for (const exito of [...exitos].reverse()) {
+        this.itemsVenta.removeAt(exito.index);
+      }
+      if (this.itemsVenta.length === 0) this.itemsVenta.push(this.crearLineaVenta());
+
+      if (exitos.length > 0) {
+        this.toast.info(`Se registraron ${exitos.length} de ${resultados.length} líneas.`);
+      }
+      this.errorForm.set(
+        `No se pudieron registrar ${fallidos.length} de ${resultados.length} líneas: ${fallidos[0].mensaje}`,
+      );
+    });
+  }
+
+  private reiniciarFormVenta(): void {
+    this.formVenta.patchValue({ motivo: 'VENTA', fecha: ahoraLocalInput(), observaciones: '' });
+    this.itemsVenta.clear();
+    this.itemsVenta.push(this.crearLineaVenta());
   }
 
   // --- Ajuste ---

@@ -1293,6 +1293,11 @@ p {
   align-items: center;
 }
 
+/* La venta no lleva costo unitario: producto, cantidad, subtotal y quitar. */
+.linea-venta {
+  grid-template-columns: minmax(200px, 2fr) 110px 120px 40px;
+}
+
 .linea-subtotal {
   text-align: right;
   font-weight: 600;

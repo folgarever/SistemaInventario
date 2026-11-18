@@ -48,7 +48,7 @@ SistemaInventario/
 | Entradas | Registro multi-producto de compras con proveedor, totales e historial. |
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
-| Movimientos | Registra compras, ventas, ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
+| Movimientos | Registra compras, ventas (carrito multi-producto), ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Avisos | Notificaciones locales de stock bajo: avisa cuando un producto se agota o baja del mínimo mientras la app está abierta (se activa desde el perfil). |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
