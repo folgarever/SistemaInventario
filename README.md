@@ -107,12 +107,17 @@ página), conservando las cantidades y marcas que ya hayas hecho.
 
 ## Manual de usuario
 
-El manual de usuario está en **`frontend/public/manual/Manual-Usuario.pdf`** (13 páginas):
+El manual de usuario está en **`frontend/public/manual/Manual-Usuario.pdf`** (19 páginas):
 explica cómo crear la cuenta, usar cada módulo (panel, productos, movimientos, conteo físico,
-lista de compra y reportes) y las preguntas frecuentes. Se descarga desde el enlace
-**Manual de usuario (PDF)** del pie de página de la aplicación.
+lista de compra y reportes) y las preguntas frecuentes, con **capturas de pantalla** de cada
+sección. Se descarga desde el enlace **Manual de usuario (PDF)** del pie de página de la aplicación.
 
 - `docs/manual-usuario/manual.html` — fuente del manual (HTML con estilos de impresión).
+- `docs/manual-usuario/capturas/` — capturas de pantalla usadas en el manual.
+- `docs/manual-usuario/capturas.mjs` — regenera las capturas. Levanta la app ya compilada,
+  intercepta las llamadas a la API y las responde con datos de demostración
+  (`datos-demo.mjs`), sin tocar la base de datos real
+  (`npm --prefix frontend run build` y luego `node docs/manual-usuario/capturas.mjs`).
 - `docs/manual-usuario/generar-pdf.mjs` — regenera el PDF con Chrome en modo *headless* y lo
   deja en `frontend/public/manual/` (`node docs/manual-usuario/generar-pdf.mjs`). Requiere
   Chrome o Edge; se puede indicar la ruta con la variable de entorno `CHROME_PATH`.

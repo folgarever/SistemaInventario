@@ -259,6 +259,26 @@
 
   .ficha h4 { margin-top: 0; }
 
+  /* ---------- Capturas ---------- */
+  .figura {
+    margin: 4mm 0;
+    break-inside: avoid;
+  }
+
+  .figura img {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--linea);
+    border-radius: 6px;
+  }
+
+  .figura figcaption {
+    margin-top: 1.5mm;
+    font-size: 8.5pt;
+    color: var(--tenue);
+    text-align: center;
+  }
+
   .ruta {
     font-family: "Cascadia Mono", Consolas, monospace;
     font-size: 9pt;
@@ -365,7 +385,8 @@
   <div class="nota">
     <span class="rotulo">Cómo leer este manual</span>
     Cada sección corresponde a un enlace del menú superior. Los botones y campos aparecen
-    <strong>en negrita</strong> tal como se ven en pantalla. Los recuadros verdes son consejos y los
+    <strong>en negrita</strong> tal como se ven en pantalla, y las <strong>capturas</strong> muestran
+    las pantallas reales de la aplicación. Los recuadros verdes son consejos y los
     rojos, avisos importantes.
   </div>
 </section>
@@ -388,12 +409,22 @@
     <li>Confirma el registro y ya puedes iniciar sesión con tus credenciales.</li>
   </ol>
 
+  <figure class="figura">
+    <img src="capturas/registro.png" alt="Pantalla de creación de cuenta" />
+    <figcaption>Pantalla para crear una cuenta nueva.</figcaption>
+  </figure>
+
   <h3>1.2 Iniciar sesión</h3>
   <ol class="pasos">
     <li>Escribe tu <strong>Usuario o correo</strong> (sirve cualquiera de los dos).</li>
     <li>Escribe tu <strong>Contraseña</strong>.</li>
     <li>Pulsa <strong>Iniciar sesión</strong>. Entrarás directo al <strong>Panel</strong>.</li>
   </ol>
+
+  <figure class="figura">
+    <img src="capturas/login.png" alt="Pantalla de inicio de sesión" />
+    <figcaption>Pantalla de inicio de sesión.</figcaption>
+  </figure>
 
   <h3>1.3 Recuperar la contraseña</h3>
   <ol class="pasos">
@@ -424,6 +455,11 @@
     El <strong>Panel</strong> es la primera pantalla al entrar. Muestra el estado general del negocio de
     un vistazo.
   </p>
+
+  <figure class="figura">
+    <img src="capturas/panel.png" alt="Panel con las tarjetas de resumen y las alertas de stock" />
+    <figcaption>El Panel: resumen del negocio, alertas de stock y últimos movimientos.</figcaption>
+  </figure>
 
   <h3>2.1 Tarjetas de resumen</h3>
   <table>
@@ -466,6 +502,11 @@
     En <strong>Productos</strong> se administra el catálogo: cada artículo con su código, costo, precio
     de venta, ganancia y existencias.
   </p>
+
+  <figure class="figura">
+    <img src="capturas/productos.png" alt="Listado de productos con costo, precio, ganancia y existencias" />
+    <figcaption>El catálogo de productos, con filtros, orden por columna y estados de stock.</figcaption>
+  </figure>
 
   <h3>3.1 Crear un producto</h3>
   <ol class="pasos">
@@ -532,6 +573,11 @@
     En <strong>Movimientos</strong> se registra todo lo que entra y sale del inventario. Cada operación
     deja registro en el historial y <strong>no se puede modificar después</strong>.
   </p>
+
+  <figure class="figura">
+    <img src="capturas/movimientos.png" alt="Página de movimientos con los botones de compra, venta, ajuste y devolución" />
+    <figcaption>Movimientos: registra compras, ventas, ajustes y devoluciones, y revisa el historial.</figcaption>
+  </figure>
 
   <table>
     <thead>
@@ -606,6 +652,11 @@
     generar de una sola vez los ajustes de las diferencias.
   </p>
 
+  <figure class="figura">
+    <img src="capturas/conteo.png" alt="Pantalla de conteo físico con las columnas Sistema, Contado y Diferencia" />
+    <figcaption>Conteo físico: compara lo contado con el sistema y ajusta las diferencias.</figcaption>
+  </figure>
+
   <h3>5.1 Definir la frecuencia</h3>
   <ol class="pasos">
     <li>En <strong>Frecuencia de conteo</strong>, elige cada cuánto cuentas el inventario: diario, semanal o quincenal.</li>
@@ -642,6 +693,11 @@
     La <strong>Lista de compra</strong> reúne lo que necesitas comprar. Combina los artículos que
     agregas a mano con las <strong>recomendaciones automáticas</strong> de los productos con bajo stock.
   </p>
+
+  <figure class="figura">
+    <img src="capturas/compras.png" alt="Lista de compra con artículos recomendados y manuales agrupados por proveedor" />
+    <figcaption>La Lista de compra: recomendaciones por bajo stock y artículos agregados a mano.</figcaption>
+  </figure>
 
   <h3>6.1 Actualizar recomendaciones</h3>
   <p>
@@ -699,6 +755,11 @@
     atajos <strong>Este mes</strong> y <strong>Mes anterior</strong>.
   </p>
 
+  <figure class="figura">
+    <img src="capturas/reportes.png" alt="Página de reportes con las pestañas de ventas, inventario, reposición, mermas y rotación" />
+    <figcaption>Reportes: cinco pestañas con filtros por fecha y exportación a PDF.</figcaption>
+  </figure>
+
   <div class="ficha">
     <h4>Ventas y ganancia</h4>
     <p>Operaciones, unidades vendidas, ingreso, ganancia estimada y margen, con el detalle por producto.</p>
@@ -735,6 +796,11 @@
 <!-- ======================= 8. PERFIL, TEMA Y APP ======================= -->
 <section class="seccion">
   <h2>8. Perfil, tema y aplicación</h2>
+
+  <figure class="figura">
+    <img src="capturas/perfil.png" alt="Página de perfil con los datos personales y las opciones de cuenta" />
+    <figcaption>Mi perfil: datos personales, cambio de contraseña, avisos y eliminación de la cuenta.</figcaption>
+  </figure>
 
   <h3>8.1 Mi perfil</h3>
   <table>
