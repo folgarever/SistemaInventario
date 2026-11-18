@@ -9,6 +9,7 @@ import { mensajeError } from '../../core/api-error.utils';
 import { formatoCantidad, numero } from '../../core/formato.utils';
 import { fechaCorta } from '../../core/fecha.utils';
 import { nuevoUuid } from '../../core/uuid.utils';
+import { DocumentoPdf, fechaArchivo, generarPdf } from '../../core/pdf.utils';
 import {
   FRECUENCIAS,
   FrecuenciaConteo,
@@ -41,6 +42,17 @@ interface FilaConteo {
           </p>
         </div>
         <div class="actions">
+          <button
+            type="button"
+            class="btn-uber btn-uber-outline"
+            [disabled]="filas().length === 0 || exportando()"
+            (click)="exportar()"
+          >
+            @if (exportando()) {
+              <span class="spinner"></span>
+            }
+            {{ exportando() ? 'Generando…' : 'Exportar PDF' }}
+          </button>
           <button
             type="button"
             class="btn-uber btn-uber-outline"
@@ -232,6 +244,7 @@ export class ConteoComponent implements OnInit {
   readonly productos = signal<Producto[]>([]);
   readonly cargando = signal(true);
   readonly guardando = signal(false);
+  readonly exportando = signal(false);
   readonly error = signal<string | null>(null);
   readonly buscar = signal('');
   // Cantidad contada por producto (clave = id del producto). Vacio = sin contar.
@@ -310,6 +323,70 @@ export class ConteoComponent implements OnInit {
     this.contados.set({});
     this.solicitudes.set({});
     this.error.set(null);
+  }
+
+  // Exporta la hoja de conteo actual (respeta la busqueda) a PDF.
+  async exportar(): Promise<void> {
+    const filas = this.filas();
+    if (filas.length === 0) return;
+
+    this.exportando.set(true);
+    this.error.set(null);
+    try {
+      const resumen = this.resumen();
+      const documento: DocumentoPdf = {
+        titulo: 'Conteo físico',
+        subtitulo: `Frecuencia ${this.frecuenciaTexto().toLowerCase()}`,
+        meta: this.metaConteo(),
+        resumen: [
+          { etiqueta: 'Productos', valor: String(filas.length) },
+          { etiqueta: 'Contados', valor: String(resumen.contados) },
+          { etiqueta: 'Diferencias', valor: String(resumen.diferencias) },
+          { etiqueta: 'Sobrantes', valor: String(resumen.sobrantes) },
+          { etiqueta: 'Faltantes', valor: String(resumen.faltantes) },
+        ],
+        secciones: [
+          {
+            titulo: 'Detalle del conteo',
+            columnas: [
+              { encabezado: 'SKU', clave: 'sku' },
+              { encabezado: 'Producto', clave: 'nombre' },
+              { encabezado: 'Sistema', clave: 'sistema', alineacion: 'right' },
+              { encabezado: 'Contado', clave: 'contado', alineacion: 'right' },
+              { encabezado: 'Diferencia', clave: 'diferencia', alineacion: 'right' },
+            ],
+            filas: filas.map((fila) => this.filaPdf(fila)),
+          },
+        ],
+        nombreArchivo: `conteo-fisico-${fechaArchivo()}.pdf`,
+      };
+
+      await generarPdf(documento);
+    } catch {
+      this.error.set('No se pudo generar el PDF.');
+    } finally {
+      this.exportando.set(false);
+    }
+  }
+
+  // Metadatos del recordatorio de conteo para el PDF.
+  private metaConteo(): string[] {
+    const estado = this.estado();
+    if (!estado.tieneBase) return ['Aún no se ha registrado ningún conteo.'];
+    return [`Último conteo: ${this.ultimaFecha()}`, `Próximo conteo: ${this.proximaFecha()}`];
+  }
+
+  // Fila del conteo lista para la tabla del PDF.
+  private filaPdf(fila: FilaConteo): Record<string, string> {
+    const sinContar = fila.contado === '';
+    const signo = fila.diferencia > 0 ? '+' : '';
+    return {
+      sku: fila.producto.sku,
+      nombre: `${fila.producto.nombre} (${fila.producto.unidad_medida})`,
+      sistema: formatoCantidad(fila.producto.stock),
+      contado: sinContar ? '—' : formatoCantidad(fila.contado),
+      diferencia: sinContar ? '—' : `${signo}${formatoCantidad(fila.diferencia)}`,
+    };
   }
 
   // Devuelve (y crea si hace falta) el identificador de idempotencia de un producto.

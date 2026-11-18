@@ -48,7 +48,7 @@ SistemaInventario/
 | Entradas | Registro multi-producto de compras con proveedor, totales e historial. |
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
-| Conteo físico | Recorrido guiado de los productos para contar las existencias y generar los ajustes de las diferencias. La frecuencia (diario, semanal o quincenal) se configura y se recuerda para avisar cuándo toca el próximo conteo. |
+| Conteo físico | Recorrido guiado de los productos para contar las existencias y generar los ajustes de las diferencias. La frecuencia (diario, semanal o quincenal) se configura y se recuerda para avisar cuándo toca el próximo conteo. La hoja de conteo se puede exportar a PDF. |
 | Movimientos | Registra compras, ventas (carrito multi-producto), ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Avisos | Notificaciones locales de stock bajo: avisa cuando un producto se agota o baja del mínimo mientras la app está abierta (se activa desde el perfil). |
