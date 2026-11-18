@@ -11,5 +11,6 @@ router.get('/inventario', ReporteController.inventario);
 router.get('/movimientos', ReporteController.movimientos);
 router.get('/ventas', ReporteController.ventas);
 router.get('/mermas', ReporteController.mermas);
+router.get('/rotacion', ReporteController.rotacion);
 
 export default router;

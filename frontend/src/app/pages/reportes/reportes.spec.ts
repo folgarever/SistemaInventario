@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { of } from 'rxjs';
 import { ReportesComponent } from './reportes';
 import { ReporteService } from '../../services/reporte.service';
-import { ReporteInventario, ReporteMermas, ReporteVentas } from '../../models';
+import { ReporteInventario, ReporteMermas, ReporteRotacion, ReporteVentas } from '../../models';
 
 const VENTAS: ReporteVentas = {
   items: [
@@ -70,11 +70,42 @@ const INVENTARIO: ReporteInventario = {
   totales: { productos: 1, unidades: 3, valorCompra: 18, valorVenta: 30, agotados: 0, bajoStock: 1 },
 };
 
+const ROTACION: ReporteRotacion = {
+  items: [
+    {
+      producto_id: 'p1',
+      nombre: 'Café',
+      sku: 'CAF-1',
+      unidad_medida: 'kg',
+      categoria: 'Bebidas',
+      stock: 3,
+      unidadesVendidas: 5,
+      ingreso: 50,
+      ultimaVenta: '2026-01-15T10:00:00Z',
+      sinMovimiento: false,
+    },
+    {
+      producto_id: 'p2',
+      nombre: 'Té',
+      sku: 'TE-1',
+      unidad_medida: 'kg',
+      categoria: null,
+      stock: 8,
+      unidadesVendidas: 0,
+      ingreso: 0,
+      ultimaVenta: null,
+      sinMovimiento: true,
+    },
+  ],
+  totales: { productos: 2, conMovimiento: 1, sinMovimiento: 1, unidades: 5, ingreso: 50 },
+};
+
 describe('ReportesComponent', () => {
   let servicio: {
     ventas: ReturnType<typeof vi.fn>;
     inventario: ReturnType<typeof vi.fn>;
     mermas: ReturnType<typeof vi.fn>;
+    rotacion: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -82,6 +113,7 @@ describe('ReportesComponent', () => {
       ventas: vi.fn().mockReturnValue(of({ success: true, data: VENTAS })),
       inventario: vi.fn().mockReturnValue(of({ success: true, data: INVENTARIO })),
       mermas: vi.fn().mockReturnValue(of({ success: true, data: MERMAS })),
+      rotacion: vi.fn().mockReturnValue(of({ success: true, data: ROTACION })),
     };
 
     await TestBed.configureTestingModule({
@@ -160,6 +192,22 @@ describe('ReportesComponent', () => {
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(texto).toContain('Pérdida total');
     expect(texto).toContain('Dañado');
+    expect(texto).toContain('Café');
+  });
+
+  it('carga el reporte de rotación y marca los productos sin movimiento', () => {
+    const fixture = TestBed.createComponent(ReportesComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.cambiarPestana('rotacion');
+    fixture.detectChanges();
+
+    expect(servicio.rotacion).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.rotacion()?.totales.sinMovimiento).toBe(1);
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Sin movimiento');
+    expect(texto).toContain('Con movimiento');
     expect(texto).toContain('Café');
   });
 });

@@ -1,4 +1,5 @@
 import { ReporteMermas, ReporteMermasItem } from '../types/reporte';
+import { aNumero, redondear } from './numeros';
 
 // Motivos de salida que representan una perdida de mercaderia (merma).
 export const MOTIVOS_MERMA = ['DANADO', 'PERDIDO'] as const;
@@ -14,15 +15,6 @@ export interface SalidaParaMerma {
     unidad_medida: string;
     precio_compra: number | string;
   } | null;
-}
-
-function aNumero(valor: number | string | null | undefined): number {
-  const n = typeof valor === 'number' ? valor : Number(String(valor ?? '0').replace(',', '.'));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function redondear(n: number): number {
-  return Math.round(n * 100) / 100;
 }
 
 // Agrupa las salidas por producto y calcula la perdida estimada usando el

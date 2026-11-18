@@ -90,3 +90,27 @@ export interface ReporteMermas {
     costoPerdido: number;
   };
 }
+
+export interface ReporteRotacionItem {
+  producto_id: string;
+  nombre: string;
+  sku: string;
+  unidad_medida: string;
+  categoria: string | null;
+  stock: number;
+  unidadesVendidas: number;
+  ingreso: number;
+  ultimaVenta: string | null;
+  sinMovimiento: boolean;
+}
+
+export interface ReporteRotacion {
+  items: ReporteRotacionItem[];
+  totales: {
+    productos: number;
+    conMovimiento: number;
+    sinMovimiento: number;
+    unidades: number;
+    ingreso: number;
+  };
+}

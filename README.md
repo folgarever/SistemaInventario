@@ -51,7 +51,7 @@ SistemaInventario/
 | Movimientos | Kardex de solo lectura: entradas, salidas y ajustes con existencias antes/después. |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
-| Reportes | Inventario valorizado, movimientos, ventas y ganancia por rango, lista de reposición y mermas. Exportación a PDF con gráficos. |
+| Reportes | Inventario valorizado, movimientos, ventas y ganancia por rango, lista de reposición, mermas y rotación. Exportación a PDF con gráficos. |
 
 ## Aplicación instalable (PWA)
 
@@ -83,7 +83,7 @@ Todos los endpoints (excepto el registro e inicio de sesión) requieren el encab
 | Movimientos | `GET /api/movimientos` |
 | Dashboard | `GET /api/dashboard/resumen` |
 | Alertas | `GET /api/alertas` |
-| Reportes | `GET /api/reportes/inventario`, `GET /api/reportes/movimientos`, `GET /api/reportes/ventas`, `GET /api/reportes/mermas` |
+| Reportes | `GET /api/reportes/inventario`, `GET /api/reportes/movimientos`, `GET /api/reportes/ventas`, `GET /api/reportes/mermas`, `GET /api/reportes/rotacion` |
 
 ## Requisitos
 

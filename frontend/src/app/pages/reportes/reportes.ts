@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ReporteService } from '../../services/reporte.service';
 import { mensajeError } from '../../core/api-error.utils';
 import {
+  fechaCorta,
   finDiaISO,
   hoyInput,
   inicioDiaISO,
@@ -17,9 +18,15 @@ import {
   ItemReposicion,
   ListaReposicion,
 } from '../../core/reposicion.utils';
-import { ReporteInventario, ReporteMermas, ReporteVentas } from '../../models';
+import {
+  ReporteInventario,
+  ReporteMermas,
+  ReporteRotacion,
+  ReporteRotacionItem,
+  ReporteVentas,
+} from '../../models';
 
-type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas';
+type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas' | 'rotacion';
 
 // Reportes de la tienda: ventas y ganancia por periodo, y valor del inventario.
 // Las exportaciones se generan en PDF con la identidad visual del sistema.
@@ -78,10 +85,18 @@ type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas';
         >
           Mermas
         </button>
+        <button
+          type="button"
+          class="tab"
+          [class.is-active]="pestana() === 'rotacion'"
+          (click)="cambiarPestana('rotacion')"
+        >
+          Rotación
+        </button>
       </div>
 
       <div class="reportes-filtros">
-        @if (pestana() === 'ventas' || pestana() === 'mermas') {
+        @if (pestana() === 'ventas' || pestana() === 'mermas' || pestana() === 'rotacion') {
           <div class="campo-fecha">
             <label class="form-label" for="r_desde">Desde</label>
             <input
@@ -113,6 +128,16 @@ type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas';
             Mes anterior
           </button>
           <button type="button" class="btn-uber btn-sm" (click)="cargar()">Aplicar</button>
+          @if (pestana() === 'rotacion') {
+            <label class="checkbox-inline">
+              <input
+                type="checkbox"
+                [checked]="soloSinMovimiento()"
+                (change)="alternarSinMovimiento($event)"
+              />
+              Solo sin movimiento
+            </label>
+          }
         } @else if (pestana() === 'inventario') {
           <label class="checkbox-inline">
             <input
@@ -424,6 +449,91 @@ type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas';
             </table>
           </div>
         }
+      } @else if (pestana() === 'rotacion') {
+        @if (rotacion(); as r) {
+          <div class="grid grid-cards mb-16">
+            <div class="stat-card">
+              <span class="stat-label">Productos</span>
+              <div class="stat-value">{{ r.totales.productos }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Con movimiento</span>
+              <div class="stat-value stat-value-sm">{{ r.totales.conMovimiento }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Sin movimiento</span>
+              <div class="stat-value stat-value-sm text-danger">{{ r.totales.sinMovimiento }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Unidades vendidas</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoCantidad(r.totales.unidades) }}
+              </div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Ingreso estimado</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoMoneda(r.totales.ingreso) }}
+              </div>
+            </div>
+          </div>
+
+          <p class="text-muted mb-16">
+            Un producto "sin movimiento" no registra ventas en el periodo. El ingreso se estima con
+            el precio de venta actual de cada producto.
+          </p>
+
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>SKU</th>
+                  <th>Categoría</th>
+                  <th class="text-right">Existencias</th>
+                  <th class="text-right">Unidades vendidas</th>
+                  <th class="text-right">Ingreso</th>
+                  <th>Última venta</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of r.items; track item.producto_id) {
+                  <tr>
+                    <td>{{ item.nombre }}</td>
+                    <td class="font-mono">{{ item.sku }}</td>
+                    <td>{{ item.categoria || '—' }}</td>
+                    <td class="text-right font-mono">
+                      {{ formatoCantidad(item.stock) }} {{ item.unidad_medida }}
+                    </td>
+                    <td class="text-right font-mono">
+                      {{ formatoCantidad(item.unidadesVendidas) }}
+                    </td>
+                    <td class="text-right font-mono">{{ formatoMoneda(item.ingreso) }}</td>
+                    <td>{{ fechaCorta(item.ultimaVenta) }}</td>
+                    <td>
+                      <span [class]="item.sinMovimiento ? 'badge badge-agotado' : 'badge badge-disponible'">
+                        <span class="badge-dot"></span>{{ item.sinMovimiento ? 'Sin movimiento' : 'Con movimiento' }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8">
+                      <div class="empty-state">
+                        <span class="empty-state-icon" aria-hidden="true">▤</span>
+                        <span class="empty-state-title">Sin productos</span>
+                        <span class="empty-state-text">
+                          No hay productos que coincidan con el filtro.
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       } @else {
         @if (reposicion(); as lista) {
           <div class="grid grid-cards mb-16">
@@ -503,6 +613,7 @@ export class ReportesComponent implements OnInit {
 
   readonly formatoMoneda = formatoMoneda;
   readonly formatoCantidad = formatoCantidad;
+  readonly fechaCorta = fechaCorta;
 
   // Filas de relleno que se muestran mientras carga el reporte.
   readonly filasSkeleton = [1, 2, 3, 4, 5];
@@ -512,11 +623,13 @@ export class ReportesComponent implements OnInit {
   hasta = signal(hoyInput());
   soloBajoStock = signal(false);
   incluirInactivos = signal(false);
+  soloSinMovimiento = signal(false);
 
   ventas = signal<ReporteVentas | null>(null);
   inventario = signal<ReporteInventario | null>(null);
   reposicion = signal<ListaReposicion | null>(null);
   mermas = signal<ReporteMermas | null>(null);
+  rotacion = signal<ReporteRotacion | null>(null);
 
   cargando = signal(false);
   error = signal<string | null>(null);
@@ -530,6 +643,7 @@ export class ReportesComponent implements OnInit {
     if (this.pestana() === 'ventas') return (this.ventas()?.items.length ?? 0) === 0;
     if (this.pestana() === 'inventario') return (this.inventario()?.items.length ?? 0) === 0;
     if (this.pestana() === 'mermas') return (this.mermas()?.items.length ?? 0) === 0;
+    if (this.pestana() === 'rotacion') return (this.rotacion()?.items.length ?? 0) === 0;
     return (this.reposicion()?.items.length ?? 0) === 0;
   }
 
@@ -557,6 +671,11 @@ export class ReportesComponent implements OnInit {
     this.cargarInventario();
   }
 
+  alternarSinMovimiento(evento: Event): void {
+    this.soloSinMovimiento.set((evento.target as HTMLInputElement).checked);
+    this.cargarRotacion();
+  }
+
   rangoMesActual(): void {
     this.desde.set(primerDiaMesInput());
     this.hasta.set(hoyInput());
@@ -576,6 +695,8 @@ export class ReportesComponent implements OnInit {
       this.cargarInventario();
     } else if (this.pestana() === 'mermas') {
       this.cargarMermas();
+    } else if (this.pestana() === 'rotacion') {
+      this.cargarRotacion();
     } else {
       this.cargarReposicion();
     }
@@ -650,6 +771,27 @@ export class ReportesComponent implements OnInit {
       });
   }
 
+  private cargarRotacion(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.reporteService
+      .rotacion({
+        desde: inicioDiaISO(this.desde()),
+        hasta: finDiaISO(this.hasta()),
+        soloSinMovimiento: this.soloSinMovimiento(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.rotacion.set(res.data);
+          this.cargando.set(false);
+        },
+        error: (e) => {
+          this.error.set(mensajeError(e, 'No se pudo cargar el reporte de rotación.'));
+          this.cargando.set(false);
+        },
+      });
+  }
+
   claseEstado(estado: string): string {
     if (estado === 'AGOTADO') return 'badge badge-agotado';
     if (estado === 'BAJO') return 'badge badge-bajo';
@@ -671,6 +813,8 @@ export class ReportesComponent implements OnInit {
         await this.exportarInventario();
       } else if (this.pestana() === 'mermas') {
         await this.exportarMermas();
+      } else if (this.pestana() === 'rotacion') {
+        await this.exportarRotacion();
       } else {
         await this.exportarReposicion();
       }
@@ -919,6 +1063,83 @@ export class ReportesComponent implements OnInit {
     };
 
     await generarPdf(documento);
+  }
+
+  private async exportarRotacion(): Promise<void> {
+    const r = this.rotacion();
+    if (!r) return;
+
+    const columnas = [
+      { encabezado: 'Producto', clave: 'nombre' },
+      { encabezado: 'SKU', clave: 'sku' },
+      { encabezado: 'Categoría', clave: 'categoria' },
+      { encabezado: 'Existencias', clave: 'stock', alineacion: 'right' as const },
+      { encabezado: 'Unidades vendidas', clave: 'unidadesVendidas', alineacion: 'right' as const },
+      { encabezado: 'Ingreso', clave: 'ingreso', alineacion: 'right' as const },
+      { encabezado: 'Última venta', clave: 'ultimaVenta' },
+    ];
+
+    const sinMovimiento = r.items.filter((item) => item.sinMovimiento);
+
+    const documento: DocumentoPdf = {
+      titulo: 'Reporte de rotación',
+      subtitulo: 'Ventas por producto en el periodo',
+      meta: [
+        `Periodo: ${this.desde()} a ${this.hasta()}`,
+        this.soloSinMovimiento()
+          ? 'Filtro: solo sin movimiento'
+          : 'Incluye todos los productos activos',
+      ],
+      resumen: [
+        { etiqueta: 'Productos', valor: String(r.totales.productos) },
+        { etiqueta: 'Con movimiento', valor: String(r.totales.conMovimiento) },
+        { etiqueta: 'Sin movimiento', valor: String(r.totales.sinMovimiento) },
+        { etiqueta: 'Unidades', valor: formatoCantidad(r.totales.unidades) },
+        { etiqueta: 'Ingreso estimado', valor: formatoMoneda(r.totales.ingreso) },
+      ],
+      graficos: [
+        {
+          titulo: 'Top productos por unidades vendidas',
+          datos: r.items
+            .filter((item) => !item.sinMovimiento)
+            .slice(0, 8)
+            .map((item) => ({ etiqueta: item.nombre, valor: numero(item.unidadesVendidas) })),
+          formatoValor: formatoCantidad,
+        },
+      ],
+      secciones: [
+        {
+          titulo: 'Detalle por producto',
+          columnas,
+          filas: r.items.map((item) => this.filaRotacion(item)),
+        },
+        ...(sinMovimiento.length
+          ? [
+              {
+                titulo: 'Productos sin movimiento',
+                columnas,
+                filas: sinMovimiento.map((item) => this.filaRotacion(item)),
+              },
+            ]
+          : []),
+      ],
+      nombreArchivo: `reporte-rotacion-${fechaArchivo()}.pdf`,
+      horizontal: true,
+    };
+
+    await generarPdf(documento);
+  }
+
+  private filaRotacion(item: ReporteRotacionItem): Record<string, string> {
+    return {
+      nombre: item.nombre,
+      sku: item.sku,
+      categoria: item.categoria ?? '—',
+      stock: `${formatoCantidad(item.stock)} ${item.unidad_medida}`,
+      unidadesVendidas: formatoCantidad(item.unidadesVendidas),
+      ingreso: formatoMoneda(item.ingreso),
+      ultimaVenta: fechaCorta(item.ultimaVenta),
+    };
   }
 
   private filaReposicion(item: ItemReposicion): Record<string, string> {

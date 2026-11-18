@@ -4,13 +4,20 @@ import {
   ReporteInventarioItem,
   ReporteMermas,
   ReporteMovimientos,
+  ReporteRotacion,
   ReporteVentas,
   ReporteVentasItem,
 } from '../types/reporte';
 import { MovimientoPublico } from '../types/movimiento';
 import { sanitizeFilterValue } from '../utils/sanitize';
 import { mapearErrorBd } from '../utils/errors';
+import { aNumero, redondear } from '../utils/numeros';
 import { agregarMermas, MOTIVOS_MERMA, SalidaParaMerma } from '../utils/mermas';
+import {
+  agregarRotacion,
+  ProductoParaRotacion,
+  SalidaParaRotacion,
+} from '../utils/rotacion';
 import { MovimientoService } from './movimientoService';
 
 const CAMPOS_INVENTARIO =
@@ -55,6 +62,12 @@ export interface FiltrosMermas {
   productoId?: string;
 }
 
+export interface FiltrosRotacion {
+  desde?: string;
+  hasta?: string;
+  soloSinMovimiento?: boolean;
+}
+
 interface SalidaParaVenta {
   cantidad: number | string;
   fecha: string;
@@ -66,15 +79,6 @@ interface SalidaParaVenta {
     precio_venta: number | string;
     precio_compra: number | string;
   } | null;
-}
-
-function aNumero(valor: number | string | null | undefined): number {
-  const n = typeof valor === 'number' ? valor : Number(String(valor ?? '0').replace(',', '.'));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function redondear(n: number): number {
-  return Math.round(n * 100) / 100;
 }
 
 export class ReporteService {
@@ -340,5 +344,59 @@ export class ReporteService {
     }
 
     return agregarMermas((data as unknown as SalidaParaMerma[]) ?? []);
+  }
+
+  // Reporte de rotacion: ventas por producto en un rango de fechas. Los
+  // productos sin ventas en el periodo se marcan como "sin movimiento".
+  static async rotacion(userId: string, filtros: FiltrosRotacion): Promise<ReporteRotacion> {
+    const { data: productosData, error: errorProductos } = await supabase
+      .from('productos')
+      .select('id, nombre, sku, unidad_medida, stock, precio_venta, categoria:categorias(nombre)')
+      .eq('user_id', userId)
+      .eq('activo', true)
+      .order('nombre', { ascending: true });
+
+    if (errorProductos) {
+      throw mapearErrorBd(errorProductos, 'Error al generar el reporte de rotación');
+    }
+
+    let salidaQuery = supabase
+      .from('salidas_inventario')
+      .select('cantidad, fecha, producto_id')
+      .eq('user_id', userId)
+      .eq('motivo', 'VENTA');
+
+    if (filtros.desde) {
+      salidaQuery = salidaQuery.gte('fecha', filtros.desde);
+    }
+    if (filtros.hasta) {
+      salidaQuery = salidaQuery.lte('fecha', filtros.hasta);
+    }
+
+    const { data: salidasData, error: errorSalidas } = await salidaQuery;
+    if (errorSalidas) {
+      throw mapearErrorBd(errorSalidas, 'Error al generar el reporte de rotación');
+    }
+
+    const reporte = agregarRotacion(
+      (productosData as unknown as ProductoParaRotacion[]) ?? [],
+      (salidasData as unknown as SalidaParaRotacion[]) ?? []
+    );
+
+    if (filtros.soloSinMovimiento) {
+      const items = reporte.items.filter((item) => item.sinMovimiento);
+      return {
+        items,
+        totales: {
+          productos: items.length,
+          conMovimiento: 0,
+          sinMovimiento: items.length,
+          unidades: 0,
+          ingreso: 0,
+        },
+      };
+    }
+
+    return reporte;
   }
 }

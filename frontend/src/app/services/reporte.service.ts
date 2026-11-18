@@ -7,6 +7,7 @@ import {
   ReporteInventario,
   ReporteMermas,
   ReporteMovimientos,
+  ReporteRotacion,
   ReporteVentas,
 } from '../models';
 
@@ -19,6 +20,7 @@ export interface FiltrosReporte {
   tipo?: string;
   soloBajoStock?: boolean;
   incluirInactivos?: boolean;
+  soloSinMovimiento?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +39,7 @@ export class ReporteService {
     if (filtros.tipo) httpParams = httpParams.set('tipo', filtros.tipo);
     if (filtros.soloBajoStock) httpParams = httpParams.set('soloBajoStock', 'true');
     if (filtros.incluirInactivos) httpParams = httpParams.set('incluirInactivos', 'true');
+    if (filtros.soloSinMovimiento) httpParams = httpParams.set('soloSinMovimiento', 'true');
     return httpParams;
   }
 
@@ -60,6 +63,12 @@ export class ReporteService {
 
   mermas(filtros: FiltrosReporte = {}): Observable<ApiResponse<ReporteMermas>> {
     return this.http.get<ApiResponse<ReporteMermas>>(`${this.apiUrl}/mermas`, {
+      params: this.params(filtros),
+    });
+  }
+
+  rotacion(filtros: FiltrosReporte = {}): Observable<ApiResponse<ReporteRotacion>> {
+    return this.http.get<ApiResponse<ReporteRotacion>>(`${this.apiUrl}/rotacion`, {
       params: this.params(filtros),
     });
   }
