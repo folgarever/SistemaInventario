@@ -4,6 +4,9 @@
   position: sticky;
   top: 0;
   z-index: 50;
+  /* Hairline + sombra tenue para separar la barra del contenido al hacer scroll. */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .navbar-container {
@@ -73,6 +76,18 @@
 .navbar-link.is-active {
   color: var(--color-white);
   background-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Anillo de foco claro: la barra siempre es oscura, por eso no sirve el anillo
+   global (negro en tema claro). */
+.navbar-brand:focus-visible,
+.navbar-link:focus-visible,
+.btn-navbar:focus-visible,
+.btn-logout:focus-visible,
+.btn-theme:focus-visible,
+.navbar-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
 }
 
 /* Indicador de alertas de stock bajo junto al enlace de Productos. */
@@ -223,7 +238,7 @@
     justify-content: flex-start;
     gap: 2px;
     padding: 10px clamp(20px, 2.6vw, 64px) 16px;
-    background-color: var(--color-black);
+    background-color: var(--navbar-bg);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: var(--shadow-md);
     display: none;

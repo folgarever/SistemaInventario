@@ -185,6 +185,7 @@ p {
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .section-title {
@@ -434,6 +435,7 @@ p {
   border: 1px solid var(--border);
   border-radius: var(--radius-uber);
   padding: 18px;
+  box-shadow: var(--shadow-xs);
 }
 
 .stat-label {
@@ -449,6 +451,7 @@ p {
   font-weight: 700;
   letter-spacing: -0.03em;
   margin-top: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value-sm {
@@ -559,6 +562,7 @@ p {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .flujo-nota {
@@ -719,6 +723,12 @@ p {
   border-bottom-color: var(--primary-bg);
 }
 
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
 /* ==========================================================================
    TABLAS
    ========================================================================== */
@@ -759,6 +769,10 @@ p {
 
 .table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.table tbody tr {
+  transition: background-color 0.12s ease;
 }
 
 .table tbody tr:hover {
@@ -1210,6 +1224,12 @@ p {
   cursor: pointer;
 }
 
+.checkbox-inline input:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
 .actions {
   display: inline-flex;
   gap: 8px;
@@ -1236,6 +1256,7 @@ p {
   width: 100%;
   max-width: 560px;
   background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   animation: modal-in 0.16s ease-out;
@@ -1269,6 +1290,11 @@ p {
 .modal-close:hover {
   background-color: var(--surface-hover);
   color: var(--text-primary);
+}
+
+.modal-close:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .modal-body {
@@ -1330,6 +1356,7 @@ p {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .detalle-fila {
@@ -1392,4 +1419,20 @@ p {
 
 .agregar-inline .form-control {
   flex: 1;
+}
+
+/* ==========================================================================
+   ACCESIBILIDAD
+   Respeta la preferencia del sistema de reducir el movimiento: desactiva
+   animaciones y transiciones decorativas sin cambiar el diseno.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

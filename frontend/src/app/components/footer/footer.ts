@@ -30,8 +30,8 @@ import { RouterLink } from '@angular/router';
     `
       .app-footer {
         margin-top: 40px;
-        border-top: 1px solid var(--color-gray-border);
-        background-color: var(--color-surface);
+        border-top: 1px solid var(--border);
+        background-color: var(--surface);
         padding: 24px clamp(20px, 2.6vw, 64px) 28px;
       }
       .footer-inner {
@@ -52,9 +52,9 @@ import { RouterLink } from '@angular/router';
         justify-content: center;
         width: 26px;
         height: 26px;
-        border-radius: 7px;
-        background-color: var(--color-black);
-        color: var(--color-white);
+        border-radius: var(--radius-uber);
+        background-color: var(--primary-bg);
+        color: var(--primary-text);
         font-size: 11px;
         font-weight: 700;
         flex: none;
@@ -63,20 +63,20 @@ import { RouterLink } from '@angular/router';
         display: block;
         font-size: 14px;
         font-weight: 700;
-        color: var(--color-black);
+        color: var(--text-primary);
         letter-spacing: -0.02em;
       }
       .footer-tag {
         display: block;
         font-size: 12px;
-        color: var(--color-gray-secondary);
+        color: var(--text-secondary);
       }
       .footer-mail {
         font-size: 13px;
-        color: var(--color-gray-secondary);
+        color: var(--text-secondary);
       }
       .footer-mail:hover {
-        color: var(--color-black);
+        color: var(--text-primary);
         text-decoration: underline;
       }
       .footer-links {
@@ -87,18 +87,24 @@ import { RouterLink } from '@angular/router';
       }
       .footer-link {
         font-size: 13px;
-        color: var(--color-gray-secondary);
+        color: var(--text-secondary);
       }
       .footer-link:hover {
-        color: var(--color-black);
+        color: var(--text-primary);
         text-decoration: underline;
+      }
+      .footer-link:focus-visible,
+      .footer-mail:focus-visible {
+        outline: none;
+        box-shadow: var(--ring);
+        border-radius: var(--radius-sm);
       }
       .footer-copy {
         margin-top: 18px;
         padding-top: 16px;
-        border-top: 1px solid var(--color-gray-border);
+        border-top: 1px solid var(--border);
         font-size: 12px;
-        color: var(--color-gray-secondary);
+        color: var(--text-secondary);
       }
       @media (max-width: 640px) {
         .footer-inner {
