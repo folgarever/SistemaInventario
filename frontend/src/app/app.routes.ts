@@ -48,6 +48,11 @@ export const routes: Routes = [
       import('./pages/movimientos/movimientos').then((m) => m.MovimientosComponent),
   },
   {
+    path: 'conteo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/conteo/conteo').then((m) => m.ConteoComponent),
+  },
+  {
     path: 'reportes',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/reportes/reportes').then((m) => m.ReportesComponent),

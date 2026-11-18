@@ -3,8 +3,8 @@
 ![CI](https://github.com/folgarever/SistemaInventario/actions/workflows/ci.yml/badge.svg)
 
 Aplicación web para administrar y controlar el inventario de una tienda: productos,
-categorías, proveedores, entradas, salidas, ajustes, movimientos, alertas de stock,
-reportes y dashboard.
+categorías, proveedores, entradas, salidas, ajustes, conteo físico, movimientos, alertas de
+stock, reportes y dashboard.
 
 - **Frontend:** Angular 22 + TypeScript (standalone components, signals).
 - **Backend:** Node.js + Express + TypeScript (API REST).
@@ -48,6 +48,7 @@ SistemaInventario/
 | Entradas | Registro multi-producto de compras con proveedor, totales e historial. |
 | Salidas | Registro de salidas con motivo (venta, dañado, perdido, uso interno, etc.). |
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
+| Conteo físico | Recorrido guiado de los productos para contar las existencias y generar los ajustes de las diferencias. La frecuencia (diario, semanal o quincenal) se configura y se recuerda para avisar cuándo toca el próximo conteo. |
 | Movimientos | Registra compras, ventas (carrito multi-producto), ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Avisos | Notificaciones locales de stock bajo: avisa cuando un producto se agota o baja del mínimo mientras la app está abierta (se activa desde el perfil). |
@@ -73,6 +74,16 @@ activarlas, la app pide permiso y luego avisa (con el *service worker*) cuando u
 agota o baja del stock mínimo. Revisa las alertas cada 5 minutos y no repite el mismo aviso:
 solo notifica los productos nuevos o que cambian de estado. Funciona **mientras la app esté
 abierta** y no requiere configuración adicional en el servidor.
+
+### Conteo físico
+
+La página **Conteo** permite recorrer los productos activos y anotar lo que hay realmente en
+cada uno. Los productos que coinciden con el sistema se dejan en blanco y solo se generan
+ajustes (motivo `CONTEO_FISICO`) para las diferencias. Cada ajuste es idempotente y, si una
+línea falla, las que sí se registraron se quitan para poder reintentar solo las pendientes.
+
+La **frecuencia** de conteo (diario, semanal o quincenal) se guarda en el navegador y, a partir
+del último conteo registrado, la app muestra cuándo toca el siguiente o si ya está vencido.
 
 ## API REST
 

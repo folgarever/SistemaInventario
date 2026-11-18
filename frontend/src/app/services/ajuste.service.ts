@@ -18,6 +18,8 @@ export interface ListarAjustesParams {
   motivo?: string;
   desde?: string;
   hasta?: string;
+  page?: number;
+  limit?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +34,8 @@ export class AjusteService {
     if (params.motivo) httpParams = httpParams.set('motivo', params.motivo);
     if (params.desde) httpParams = httpParams.set('desde', params.desde);
     if (params.hasta) httpParams = httpParams.set('hasta', params.hasta);
+    if (params.page) httpParams = httpParams.set('page', String(params.page));
+    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
     return this.http.get<ApiResponse<ResultadoPaginado<Ajuste>>>(this.apiUrl, {
       params: httpParams,
     });

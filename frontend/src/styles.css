@@ -765,6 +765,17 @@ p {
   background-color: var(--row-hover);
 }
 
+/* Conteo fisico: fila con diferencia y campo de cantidad contada. */
+.fila-diferencia {
+  background-color: var(--surface-muted);
+}
+
+.conteo-input {
+  max-width: 110px;
+  margin-left: auto;
+  text-align: right;
+}
+
 /* ==========================================================================
    ETIQUETAS DE ESTADO
    ========================================================================== */
@@ -875,6 +886,7 @@ p {
 .mt-16 { margin-top: 16px; }
 .mt-24 { margin-top: 24px; }
 .mb-16 { margin-bottom: 16px; }
+.mb-0 { margin-bottom: 0; }
 .hidden { display: none; }
 .text-danger { color: var(--color-danger); }
 
