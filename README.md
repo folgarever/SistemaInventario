@@ -51,7 +51,19 @@ SistemaInventario/
 | Movimientos | Kardex de solo lectura: entradas, salidas y ajustes con existencias antes/después. |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
-| Reportes | Reportes de inventario valorizado, movimientos, ventas y ganancia por rango, con exportación a PDF. |
+| Reportes | Inventario valorizado, movimientos, ventas y ganancia por rango, y lista de reposición. Exportación a PDF con gráficos. |
+
+## Aplicación instalable (PWA)
+
+El frontend incluye un *manifest* y un *service worker* (`@angular/service-worker`), por lo
+que se puede **instalar en el móvil** (Añadir a pantalla de inicio) y abrir sin conexión el
+último contenido visitado. La caché se actualiza sola al publicar una versión nueva.
+
+- `frontend/public/manifest.webmanifest` — nombre, colores e iconos (192/512, incluidos los
+  *maskable* para Android).
+- `frontend/ngsw-config.json` — grupos de caché: *app shell* (precarga), imágenes de marca
+  (bajo demanda) y tipografía de Google Fonts.
+- El service worker se registra **solo en producción** (no en `ng serve`).
 
 ## API REST
 
