@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import {
   ApiResponse,
   ReporteInventario,
+  ReporteMermas,
   ReporteMovimientos,
   ReporteVentas,
 } from '../models';
@@ -53,6 +54,12 @@ export class ReporteService {
 
   ventas(filtros: FiltrosReporte = {}): Observable<ApiResponse<ReporteVentas>> {
     return this.http.get<ApiResponse<ReporteVentas>>(`${this.apiUrl}/ventas`, {
+      params: this.params(filtros),
+    });
+  }
+
+  mermas(filtros: FiltrosReporte = {}): Observable<ApiResponse<ReporteMermas>> {
+    return this.http.get<ApiResponse<ReporteMermas>>(`${this.apiUrl}/mermas`, {
       params: this.params(filtros),
     });
   }

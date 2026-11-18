@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import {
   ReporteInventario,
   ReporteInventarioItem,
+  ReporteMermas,
   ReporteMovimientos,
   ReporteVentas,
   ReporteVentasItem,
@@ -9,6 +10,7 @@ import {
 import { MovimientoPublico } from '../types/movimiento';
 import { sanitizeFilterValue } from '../utils/sanitize';
 import { mapearErrorBd } from '../utils/errors';
+import { agregarMermas, MOTIVOS_MERMA, SalidaParaMerma } from '../utils/mermas';
 import { MovimientoService } from './movimientoService';
 
 const CAMPOS_INVENTARIO =
@@ -42,6 +44,12 @@ export interface FiltrosMovimientos {
 }
 
 export interface FiltrosVentas {
+  desde?: string;
+  hasta?: string;
+  productoId?: string;
+}
+
+export interface FiltrosMermas {
   desde?: string;
   hasta?: string;
   productoId?: string;
@@ -301,5 +309,36 @@ export class ReporteService {
         margen: ingreso > 0 ? redondear((ganancia / ingreso) * 100) : 0,
       },
     };
+  }
+
+  // Reporte de mermas: salidas por dano o perdida en un rango de fechas.
+  // La perdida se estima con el costo actual de cada producto.
+  static async mermas(userId: string, filtros: FiltrosMermas): Promise<ReporteMermas> {
+    let query = supabase
+      .from('salidas_inventario')
+      .select(
+        'cantidad, motivo, fecha, producto:productos(id, nombre, sku, unidad_medida, precio_compra)'
+      )
+      .eq('user_id', userId)
+      .in('motivo', MOTIVOS_MERMA);
+
+    if (filtros.productoId) {
+      query = query.eq('producto_id', sanitizeFilterValue(filtros.productoId));
+    }
+    if (filtros.desde) {
+      query = query.gte('fecha', filtros.desde);
+    }
+    if (filtros.hasta) {
+      query = query.lte('fecha', filtros.hasta);
+    }
+
+    query = query.order('fecha', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) {
+      throw mapearErrorBd(error, 'Error al generar el reporte de mermas');
+    }
+
+    return agregarMermas((data as unknown as SalidaParaMerma[]) ?? []);
   }
 }

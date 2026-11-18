@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { of } from 'rxjs';
 import { ReportesComponent } from './reportes';
 import { ReporteService } from '../../services/reporte.service';
-import { ReporteInventario, ReporteVentas } from '../../models';
+import { ReporteInventario, ReporteMermas, ReporteVentas } from '../../models';
 
 const VENTAS: ReporteVentas = {
   items: [
@@ -22,6 +22,31 @@ const VENTAS: ReporteVentas = {
     },
   ],
   totales: { operaciones: 1, unidades: 3, ingreso: 30, costo: 18, ganancia: 12, margen: 40 },
+};
+
+const MERMAS: ReporteMermas = {
+  items: [
+    {
+      producto_id: 'p1',
+      nombre: 'Café',
+      sku: 'CAF-1',
+      unidad_medida: 'kg',
+      precio_compra: 6,
+      unidades: 5,
+      unidadesDanado: 2,
+      unidadesPerdido: 3,
+      costo: 30,
+    },
+  ],
+  totales: {
+    operaciones: 2,
+    unidades: 5,
+    costo: 30,
+    unidadesDanado: 2,
+    unidadesPerdido: 3,
+    costoDanado: 12,
+    costoPerdido: 18,
+  },
 };
 
 const INVENTARIO: ReporteInventario = {
@@ -46,12 +71,17 @@ const INVENTARIO: ReporteInventario = {
 };
 
 describe('ReportesComponent', () => {
-  let servicio: { ventas: ReturnType<typeof vi.fn>; inventario: ReturnType<typeof vi.fn> };
+  let servicio: {
+    ventas: ReturnType<typeof vi.fn>;
+    inventario: ReturnType<typeof vi.fn>;
+    mermas: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     servicio = {
       ventas: vi.fn().mockReturnValue(of({ success: true, data: VENTAS })),
       inventario: vi.fn().mockReturnValue(of({ success: true, data: INVENTARIO })),
+      mermas: vi.fn().mockReturnValue(of({ success: true, data: MERMAS })),
     };
 
     await TestBed.configureTestingModule({
@@ -114,6 +144,22 @@ describe('ReportesComponent', () => {
     expect(texto).toContain('Productos a reponer');
     expect(texto).toContain('Costo estimado de reposición');
     expect(texto).toContain('Sugerido');
+    expect(texto).toContain('Café');
+  });
+
+  it('carga el reporte de mermas y muestra la pérdida', () => {
+    const fixture = TestBed.createComponent(ReportesComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.cambiarPestana('mermas');
+    fixture.detectChanges();
+
+    expect(servicio.mermas).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.mermas()?.totales.costo).toBe(30);
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Pérdida total');
+    expect(texto).toContain('Dañado');
     expect(texto).toContain('Café');
   });
 });

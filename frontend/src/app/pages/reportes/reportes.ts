@@ -17,9 +17,9 @@ import {
   ItemReposicion,
   ListaReposicion,
 } from '../../core/reposicion.utils';
-import { ReporteInventario, ReporteVentas } from '../../models';
+import { ReporteInventario, ReporteMermas, ReporteVentas } from '../../models';
 
-type Pestana = 'ventas' | 'inventario' | 'reposicion';
+type Pestana = 'ventas' | 'inventario' | 'reposicion' | 'mermas';
 
 // Reportes de la tienda: ventas y ganancia por periodo, y valor del inventario.
 // Las exportaciones se generan en PDF con la identidad visual del sistema.
@@ -70,10 +70,18 @@ type Pestana = 'ventas' | 'inventario' | 'reposicion';
         >
           Reposición
         </button>
+        <button
+          type="button"
+          class="tab"
+          [class.is-active]="pestana() === 'mermas'"
+          (click)="cambiarPestana('mermas')"
+        >
+          Mermas
+        </button>
       </div>
 
       <div class="reportes-filtros">
-        @if (pestana() === 'ventas') {
+        @if (pestana() === 'ventas' || pestana() === 'mermas') {
           <div class="campo-fecha">
             <label class="form-label" for="r_desde">Desde</label>
             <input
@@ -335,6 +343,87 @@ type Pestana = 'ventas' | 'inventario' | 'reposicion';
             </table>
           </div>
         }
+      } @else if (pestana() === 'mermas') {
+        @if (mermas(); as m) {
+          <div class="grid grid-cards mb-16">
+            <div class="stat-card">
+              <span class="stat-label">Operaciones</span>
+              <div class="stat-value">{{ m.totales.operaciones }}</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Unidades perdidas</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoCantidad(m.totales.unidades) }}
+              </div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Pérdida total</span>
+              <div class="stat-value stat-value-sm font-mono text-danger">
+                {{ formatoMoneda(m.totales.costo) }}
+              </div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Dañado</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoMoneda(m.totales.costoDanado) }}
+              </div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Perdido</span>
+              <div class="stat-value stat-value-sm font-mono">
+                {{ formatoMoneda(m.totales.costoPerdido) }}
+              </div>
+            </div>
+          </div>
+
+          <p class="text-muted mb-16">
+            La pérdida es una estimación: se calcula con el costo actual de cada producto, no con el
+            costo del momento de la salida.
+          </p>
+
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>SKU</th>
+                  <th class="text-right">Unidades</th>
+                  <th class="text-right">Dañado</th>
+                  <th class="text-right">Perdido</th>
+                  <th class="text-right">Costo unitario</th>
+                  <th class="text-right">Pérdida</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of m.items; track item.producto_id) {
+                  <tr>
+                    <td>{{ item.nombre }}</td>
+                    <td class="font-mono">{{ item.sku }}</td>
+                    <td class="text-right font-mono">
+                      {{ formatoCantidad(item.unidades) }} {{ item.unidad_medida }}
+                    </td>
+                    <td class="text-right font-mono">{{ formatoCantidad(item.unidadesDanado) }}</td>
+                    <td class="text-right font-mono">{{ formatoCantidad(item.unidadesPerdido) }}</td>
+                    <td class="text-right font-mono">{{ formatoMoneda(item.precio_compra) }}</td>
+                    <td class="text-right font-mono text-danger">{{ formatoMoneda(item.costo) }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        <span class="empty-state-icon" aria-hidden="true">✓</span>
+                        <span class="empty-state-title">Sin mermas</span>
+                        <span class="empty-state-text">
+                          No hay productos dañados ni perdidos en el periodo seleccionado.
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       } @else {
         @if (reposicion(); as lista) {
           <div class="grid grid-cards mb-16">
@@ -427,6 +516,7 @@ export class ReportesComponent implements OnInit {
   ventas = signal<ReporteVentas | null>(null);
   inventario = signal<ReporteInventario | null>(null);
   reposicion = signal<ListaReposicion | null>(null);
+  mermas = signal<ReporteMermas | null>(null);
 
   cargando = signal(false);
   error = signal<string | null>(null);
@@ -439,6 +529,7 @@ export class ReportesComponent implements OnInit {
   sinDatos(): boolean {
     if (this.pestana() === 'ventas') return (this.ventas()?.items.length ?? 0) === 0;
     if (this.pestana() === 'inventario') return (this.inventario()?.items.length ?? 0) === 0;
+    if (this.pestana() === 'mermas') return (this.mermas()?.items.length ?? 0) === 0;
     return (this.reposicion()?.items.length ?? 0) === 0;
   }
 
@@ -483,6 +574,8 @@ export class ReportesComponent implements OnInit {
       this.cargarVentas();
     } else if (this.pestana() === 'inventario') {
       this.cargarInventario();
+    } else if (this.pestana() === 'mermas') {
+      this.cargarMermas();
     } else {
       this.cargarReposicion();
     }
@@ -540,6 +633,23 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  private cargarMermas(): void {
+    this.cargando.set(true);
+    this.error.set(null);
+    this.reporteService
+      .mermas({ desde: inicioDiaISO(this.desde()), hasta: finDiaISO(this.hasta()) })
+      .subscribe({
+        next: (res) => {
+          this.mermas.set(res.data);
+          this.cargando.set(false);
+        },
+        error: (e) => {
+          this.error.set(mensajeError(e, 'No se pudo cargar el reporte de mermas.'));
+          this.cargando.set(false);
+        },
+      });
+  }
+
   claseEstado(estado: string): string {
     if (estado === 'AGOTADO') return 'badge badge-agotado';
     if (estado === 'BAJO') return 'badge badge-bajo';
@@ -559,6 +669,8 @@ export class ReportesComponent implements OnInit {
         await this.exportarVentas();
       } else if (this.pestana() === 'inventario') {
         await this.exportarInventario();
+      } else if (this.pestana() === 'mermas') {
+        await this.exportarMermas();
       } else {
         await this.exportarReposicion();
       }
@@ -737,6 +849,72 @@ export class ReportesComponent implements OnInit {
         filas: grupo.items.map((item) => this.filaReposicion(item)),
       })),
       nombreArchivo: `lista-reposicion-${fechaArchivo()}.pdf`,
+      horizontal: true,
+    };
+
+    await generarPdf(documento);
+  }
+
+  private async exportarMermas(): Promise<void> {
+    const m = this.mermas();
+    if (!m) return;
+
+    const documento: DocumentoPdf = {
+      titulo: 'Reporte de mermas',
+      subtitulo: 'Productos dañados y perdidos',
+      meta: [
+        `Periodo: ${this.desde()} a ${this.hasta()}`,
+        'La pérdida se estima con el costo actual de cada producto.',
+      ],
+      resumen: [
+        { etiqueta: 'Operaciones', valor: String(m.totales.operaciones) },
+        { etiqueta: 'Unidades', valor: formatoCantidad(m.totales.unidades) },
+        { etiqueta: 'Pérdida total', valor: formatoMoneda(m.totales.costo) },
+        { etiqueta: 'Dañado', valor: formatoMoneda(m.totales.costoDanado) },
+        { etiqueta: 'Perdido', valor: formatoMoneda(m.totales.costoPerdido) },
+      ],
+      graficos: [
+        {
+          titulo: 'Pérdida por producto',
+          datos: [...m.items]
+            .sort((a, b) => numero(b.costo) - numero(a.costo))
+            .slice(0, 8)
+            .map((item) => ({ etiqueta: item.nombre, valor: numero(item.costo) })),
+          formatoValor: formatoMoneda,
+        },
+        {
+          titulo: 'Pérdida por motivo',
+          datos: [
+            { etiqueta: 'Dañado', valor: numero(m.totales.costoDanado) },
+            { etiqueta: 'Perdido', valor: numero(m.totales.costoPerdido) },
+          ],
+          formatoValor: formatoMoneda,
+        },
+      ],
+      secciones: [
+        {
+          titulo: 'Detalle por producto',
+          columnas: [
+            { encabezado: 'Producto', clave: 'nombre' },
+            { encabezado: 'SKU', clave: 'sku' },
+            { encabezado: 'Unidades', clave: 'unidades', alineacion: 'right' },
+            { encabezado: 'Dañado', clave: 'unidadesDanado', alineacion: 'right' },
+            { encabezado: 'Perdido', clave: 'unidadesPerdido', alineacion: 'right' },
+            { encabezado: 'Costo unitario', clave: 'precio_compra', alineacion: 'right' },
+            { encabezado: 'Pérdida', clave: 'costo', alineacion: 'right' },
+          ],
+          filas: m.items.map((item) => ({
+            nombre: item.nombre,
+            sku: item.sku,
+            unidades: `${formatoCantidad(item.unidades)} ${item.unidad_medida}`,
+            unidadesDanado: formatoCantidad(item.unidadesDanado),
+            unidadesPerdido: formatoCantidad(item.unidadesPerdido),
+            precio_compra: formatoMoneda(item.precio_compra),
+            costo: formatoMoneda(item.costo),
+          })),
+        },
+      ],
+      nombreArchivo: `reporte-mermas-${fechaArchivo()}.pdf`,
       horizontal: true,
     };
 

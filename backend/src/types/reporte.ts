@@ -65,3 +65,28 @@ export interface ReporteVentas {
     margen: number;
   };
 }
+
+export interface ReporteMermasItem {
+  producto_id: string;
+  nombre: string;
+  sku: string;
+  unidad_medida: string;
+  precio_compra: number;
+  unidades: number;
+  unidadesDanado: number;
+  unidadesPerdido: number;
+  costo: number;
+}
+
+export interface ReporteMermas {
+  items: ReporteMermasItem[];
+  totales: {
+    operaciones: number;
+    unidades: number;
+    costo: number;
+    unidadesDanado: number;
+    unidadesPerdido: number;
+    costoDanado: number;
+    costoPerdido: number;
+  };
+}

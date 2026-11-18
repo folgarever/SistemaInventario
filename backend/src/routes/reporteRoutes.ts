@@ -10,5 +10,6 @@ router.use(authenticateToken);
 router.get('/inventario', ReporteController.inventario);
 router.get('/movimientos', ReporteController.movimientos);
 router.get('/ventas', ReporteController.ventas);
+router.get('/mermas', ReporteController.mermas);
 
 export default router;
