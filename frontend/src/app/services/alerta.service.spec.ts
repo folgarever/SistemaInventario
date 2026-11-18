@@ -37,9 +37,11 @@ describe('AlertaService', () => {
   it('sincroniza el resumen y limpia el conteo', () => {
     servicio.sincronizar({ agotados: 1, bajoStock: 4, total: 5, items: [] });
     expect(servicio.total()).toBe(5);
+    expect(servicio.ultimas()?.total).toBe(5);
 
     servicio.limpiar();
     expect(servicio.total()).toBe(0);
     expect(servicio.agotados()).toBe(0);
+    expect(servicio.ultimas()).toBeNull();
   });
 });

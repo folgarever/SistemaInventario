@@ -3,6 +3,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { AuthService } from '../../core/auth.service';
 import { mensajeError } from '../../core/api-error.utils';
 import { ToastService } from '../../core/toast.service';
+import { NotificacionService } from '../../services/notificacion.service';
 
 function passwordsIguales(control: AbstractControl): { [key: string]: boolean } | null {
   const nueva = control.get('passwordNueva')?.value;
@@ -141,6 +142,39 @@ function passwordsIguales(control: AbstractControl): { [key: string]: boolean } 
         </div>
       </div>
 
+      <div class="card mt-16">
+        <div class="card-header">
+          <h2 class="section-title">Avisos de stock bajo</h2>
+        </div>
+
+        @if (!notificaciones.soportado) {
+          <p class="text-muted mb-0">Tu navegador no admite notificaciones.</p>
+        } @else {
+          <p class="text-muted mb-16">
+            Recibe un aviso cuando un producto se agote o baje del stock mínimo. Funciona mientras
+            la aplicación esté abierta.
+          </p>
+
+          <div class="btn-row">
+            @if (notificaciones.habilitado()) {
+              <span class="badge badge-disponible"><span class="badge-dot"></span>Avisos activados</span>
+              <button type="button" class="btn-uber btn-uber-outline" (click)="desactivarAvisos()">
+                Desactivar
+              </button>
+            } @else {
+              <button type="button" class="btn-uber" (click)="activarAvisos()">Activar avisos</button>
+            }
+          </div>
+
+          @if (notificaciones.permiso() === 'denied') {
+            <span class="form-error">
+              Las notificaciones están bloqueadas en el navegador. Habilítalas desde la
+              configuración del sitio.
+            </span>
+          }
+        }
+      </div>
+
       <div class="card card-danger mt-16">
         <div class="card-header">
           <h2 class="section-title text-danger">Eliminar cuenta</h2>
@@ -200,6 +234,8 @@ export class PerfilComponent implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+
+  readonly notificaciones = inject(NotificacionService);
 
   usuario = this.auth.currentUser;
 
@@ -289,6 +325,22 @@ export class PerfilComponent implements OnInit {
         this.guardandoPassword.set(false);
       },
     });
+  }
+
+  async activarAvisos(): Promise<void> {
+    const activo = await this.notificaciones.activar();
+    if (activo) {
+      this.toast.exito('Avisos de stock bajo activados.');
+    } else if (this.notificaciones.permiso() === 'denied') {
+      this.toast.error('El navegador bloqueó las notificaciones.');
+    } else {
+      this.toast.error('No se pudieron activar los avisos.');
+    }
+  }
+
+  desactivarAvisos(): void {
+    this.notificaciones.desactivar();
+    this.toast.exito('Avisos de stock bajo desactivados.');
   }
 
   cancelarEliminar(): void {

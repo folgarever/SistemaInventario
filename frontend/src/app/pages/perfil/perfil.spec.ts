@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { of } from 'rxjs';
 import { PerfilComponent } from './perfil';
 import { AuthService } from '../../core/auth.service';
+import { NotificacionService } from '../../services/notificacion.service';
 import { Usuario } from '../../models';
 
 const USUARIO: Usuario = {
@@ -25,12 +26,23 @@ function configurar(usuario: Usuario) {
     logout: vi.fn(),
   };
 
+  const notificaciones = {
+    soportado: true,
+    habilitado: signal(false),
+    permiso: signal<'default' | 'denied' | 'granted'>('default'),
+    activar: vi.fn().mockResolvedValue(true),
+    desactivar: vi.fn(),
+  };
+
   TestBed.configureTestingModule({
     imports: [PerfilComponent],
-    providers: [{ provide: AuthService, useValue: auth }],
+    providers: [
+      { provide: AuthService, useValue: auth },
+      { provide: NotificacionService, useValue: notificaciones },
+    ],
   });
 
-  return { auth, fixture: TestBed.createComponent(PerfilComponent) };
+  return { auth, notificaciones, fixture: TestBed.createComponent(PerfilComponent) };
 }
 
 describe('PerfilComponent', () => {
@@ -57,5 +69,19 @@ describe('PerfilComponent', () => {
     fixture.componentInstance.eliminarCuenta();
 
     expect(auth.eliminarCuenta).toHaveBeenCalledWith('secreta123');
+  });
+
+  it('permite activar y desactivar los avisos de stock bajo', async () => {
+    const { notificaciones, fixture } = configurar(USUARIO);
+    fixture.detectChanges();
+
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Avisos de stock bajo');
+
+    await fixture.componentInstance.activarAvisos();
+    expect(notificaciones.activar).toHaveBeenCalledTimes(1);
+
+    fixture.componentInstance.desactivarAvisos();
+    expect(notificaciones.desactivar).toHaveBeenCalledTimes(1);
   });
 });

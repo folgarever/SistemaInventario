@@ -50,6 +50,7 @@ SistemaInventario/
 | Ajustes | Correcciones de inventario por conteo físico, error de registro, merma o devolución. |
 | Movimientos | Registra compras, ventas, ajustes y devoluciones, y muestra el kardex de solo lectura (entradas, salidas y ajustes con existencias antes/después). |
 | Alertas | Productos agotados o por debajo del stock mínimo. |
+| Avisos | Notificaciones locales de stock bajo: avisa cuando un producto se agota o baja del mínimo mientras la app está abierta (se activa desde el perfil). |
 | Dashboard | Totales, valor del inventario, alertas y movimientos recientes. |
 | Reportes | Inventario valorizado, movimientos, ventas y ganancia por rango, lista de reposición, mermas y rotación. Exportación a PDF con gráficos. |
 
@@ -64,6 +65,14 @@ que se puede **instalar en el móvil** (Añadir a pantalla de inicio) y abrir si
 - `frontend/ngsw-config.json` — grupos de caché: *app shell* (precarga), imágenes de marca
   (bajo demanda) y tipografía de Google Fonts.
 - El service worker se registra **solo en producción** (no en `ng serve`).
+
+### Avisos de stock bajo
+
+Desde **Perfil → Avisos de stock bajo** se pueden activar las notificaciones del navegador. Al
+activarlas, la app pide permiso y luego avisa (con el *service worker*) cuando un producto se
+agota o baja del stock mínimo. Revisa las alertas cada 5 minutos y no repite el mismo aviso:
+solo notifica los productos nuevos o que cambian de estado. Funciona **mientras la app esté
+abierta** y no requiere configuración adicional en el servidor.
 
 ## API REST
 

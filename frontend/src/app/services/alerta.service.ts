@@ -13,10 +13,13 @@ export class AlertaService {
 
   readonly total = signal(0);
   readonly agotados = signal(0);
+  // Ultimo resumen completo recibido, usado por los avisos de stock bajo.
+  readonly ultimas = signal<AlertasDashboard | null>(null);
 
   sincronizar(alertas: AlertasDashboard): void {
     this.total.set(alertas.total);
     this.agotados.set(alertas.agotados);
+    this.ultimas.set(alertas);
   }
 
   cargar(): void {
@@ -30,5 +33,6 @@ export class AlertaService {
   limpiar(): void {
     this.total.set(0);
     this.agotados.set(0);
+    this.ultimas.set(null);
   }
 }
