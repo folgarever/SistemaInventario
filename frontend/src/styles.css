@@ -436,6 +436,13 @@ p {
   border-radius: var(--radius-uber);
   padding: 18px;
   box-shadow: var(--shadow-xs);
+  transition: var(--transition);
+}
+
+/* Realce suave al pasar el cursor: destaca la tarjeta sin sugerir clic. */
+.stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-label {
@@ -734,7 +741,8 @@ p {
    ========================================================================== */
 .table-wrapper {
   width: 100%;
-  overflow-x: auto;
+  max-height: 78vh;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-uber);
   background-color: var(--surface);
@@ -748,6 +756,9 @@ p {
 }
 
 .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   text-align: left;
   font-size: 12px;
   font-weight: 600;
@@ -756,7 +767,7 @@ p {
   color: var(--text-secondary);
   background-color: var(--surface-muted);
   padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
+  box-shadow: inset 0 -1px 0 var(--border);
   white-space: nowrap;
 }
 
